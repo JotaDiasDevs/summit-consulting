@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../contexts/auth/AuthContext'
-import { apiService } from '../../services/api/apiService'
+import { apiService, consultaService } from '../../services/api/apiService'
 import type { Consulta } from '../../types/common'
 import { formatarData } from '../../utils/dateFormat'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
@@ -22,12 +22,36 @@ const Dashboard: React.FC = () => {
         setCarregando(true)
         setErro('')
         
-        const consultasData = await apiService.buscarConsultasPorUsuario(usuario.id)
+        console.log('🔍 Buscando consultas para usuário ID:', usuario.id)
         
+        // Busca consultas do usuário (sem filtro de status para pegar todas)
+        let consultasData: Consulta[] = []
+        try {
+          // Busca todas as consultas do usuário (sem filtro de status)
+          consultasData = await consultaService.buscarPorUsuario(usuario.id)
+          console.log('📋 Consultas recebidas da API:', consultasData)
+        } catch (error) {
+          console.warn('⚠️ Erro ao buscar consultas, tentando método alternativo:', error)
+          // Fallback: tenta com o método antigo
+          try {
+            consultasData = await apiService.buscarConsultasPorUsuario(usuario.id)
+            console.log('📋 Consultas recebidas (método alternativo):', consultasData)
+          } catch (error2) {
+            console.error('❌ Erro ao buscar consultas:', error2)
+            // Não lança erro, apenas define array vazio
+            consultasData = []
+          }
+        }
         
         if (Array.isArray(consultasData) && consultasData.length > 0) {
           const consultasOrdenadas = consultasData
-            .filter(consulta => consulta && consulta.data && consulta.especialidade) // Filtra consultas válidas
+            .filter(consulta => {
+              const isValid = consulta && consulta.data && consulta.especialidade
+              if (!isValid) {
+                console.warn('⚠️ Consulta inválida filtrada:', consulta)
+              }
+              return isValid
+            })
             .sort((a, b) => {
               try {
                 const dataA = new Date(`${a.data}T${a.horario || '00:00'}`).getTime()
@@ -37,12 +61,14 @@ const Dashboard: React.FC = () => {
                 return 0
               }
             })
+          console.log('✅ Consultas válidas após filtro:', consultasOrdenadas.length)
           setConsultas(consultasOrdenadas)
         } else {
+          console.log('ℹ️ Nenhuma consulta encontrada ou array vazio')
           setConsultas([])
         }
       } catch (error) {
-        console.error('Erro ao carregar consultas:', error)
+        console.error('❌ Erro ao carregar consultas:', error)
         setErro('Erro ao carregar suas consultas. Tente novamente mais tarde.')
         setConsultas([])
       } finally {

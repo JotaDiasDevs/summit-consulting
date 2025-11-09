@@ -54,15 +54,17 @@ const Cadastro: React.FC = () => {
         try {
           const consultasAleatorias = gerarConsultasAleatorias(2)
           
-          // Cria as consultas de forma assíncrona (não bloqueia o login)
-          Promise.all(
+          // Aguarda a criação das consultas antes de fazer login
+          await Promise.all(
             consultasAleatorias.map(consulta => 
               consultaService.criar(novoUsuario.id, consulta).catch(err => {
                 console.warn('Erro ao criar consulta aleatória:', err)
                 // Não interrompe o fluxo se falhar ao criar consulta
+                return null
               })
             )
           )
+          console.log('✅ Consultas aleatórias criadas com sucesso')
         } catch (error) {
           console.warn('Erro ao criar consultas aleatórias:', error)
           // Não interrompe o fluxo se falhar ao criar consultas
