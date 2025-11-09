@@ -294,31 +294,43 @@ export const consultaService = {
 
       console.log('🔑 ID do usuário:', usuarioId, '→ Convertido para número:', idNumero)
 
-      // Tenta buscar o paciente primeiro (a API pode precisar do objeto completo)
+      // A API Java com JPA geralmente espera o objeto relacionado completo
+      // Vamos tentar buscar o paciente primeiro
       let pacienteData = null
       try {
-        const pacienteResponse = await fetchWithTimeout(
+        // Tenta diferentes endpoints possíveis
+        const endpoints = [
           `${API_BASE_URL}/pacientes/${idNumero}`,
-          { method: 'GET' },
-          TIMEOUT
-        )
-        if (pacienteResponse.ok) {
-          pacienteData = await handleResponse(pacienteResponse)
-          console.log('👤 Paciente encontrado:', pacienteData)
-        } else {
-          console.warn('⚠️ Paciente não encontrado na API, status:', pacienteResponse.status)
-          const errorText = await pacienteResponse.text()
-          console.warn('⚠️ Detalhes do erro:', errorText)
+          `${API_BASE_URL}/usuarios/${idNumero}`,
+        ]
+        
+        for (const endpoint of endpoints) {
+          try {
+            const pacienteResponse = await fetchWithTimeout(
+              endpoint,
+              { method: 'GET' },
+              TIMEOUT
+            )
+            if (pacienteResponse.ok) {
+              pacienteData = await handleResponse(pacienteResponse)
+              console.log('👤 Paciente encontrado em:', endpoint, pacienteData)
+              break
+            }
+          } catch (err) {
+            // Continua tentando o próximo endpoint
+            continue
+          }
+        }
+        
+        if (!pacienteData) {
+          console.warn('⚠️ Paciente não encontrado em nenhum endpoint')
         }
       } catch (error) {
         console.warn('⚠️ Erro ao buscar paciente:', error)
       }
 
       // Prepara o objeto da consulta
-      // A API Java pode esperar:
-      // 1. Apenas pacienteId (número)
-      // 2. Objeto paciente completo
-      // 3. Ambos
+      // APIs Java com JPA/Hibernate geralmente esperam o objeto relacionado completo
       const consultaCompleta: any = {
         data: dadosConsulta.data,
         horario: dadosConsulta.horario,
@@ -327,20 +339,34 @@ export const consultaService = {
         local: dadosConsulta.local || 'IMREA - Unidade Vila Mariana',
         observacoes: dadosConsulta.observacoes || '',
         status: 'agendada',
-        pacienteId: idNumero, // Sempre envia como número
       }
 
-      // Se conseguiu buscar o paciente, adiciona o objeto também
-      // Algumas APIs Java esperam o objeto completo para validação
-      if (pacienteData) {
+      // Se conseguiu buscar o paciente, usa o objeto completo
+      // APIs Java com JPA geralmente exigem o objeto relacionado completo
+      if (pacienteData && pacienteData.id) {
+        const pacienteIdFinal = Number(pacienteData.id) || idNumero
+        
+        // API Java espera objeto paciente completo com todos os campos
+        // Usa os dados do paciente retornado pela API
         consultaCompleta.paciente = {
-          id: Number(pacienteData.id) || idNumero,
-          nome: pacienteData.nome || '',
+          id: pacienteIdFinal,
+          nome: pacienteData.nome || pacienteData.nomeUsuario || '',
           email: pacienteData.email || '',
+          // Inclui outros campos que possam existir
+          ...(pacienteData.senha && { senha: pacienteData.senha }),
+          ...(pacienteData.tipo && { tipo: pacienteData.tipo }),
         }
-        console.log('👤 Objeto paciente adicionado ao payload')
+        // Também envia pacienteId como número (algumas APIs aceitam ambos)
+        consultaCompleta.pacienteId = pacienteIdFinal
+        console.log('👤 Usando objeto paciente completo com ID:', pacienteIdFinal)
       } else {
-        console.warn('⚠️ Paciente não encontrado, enviando apenas pacienteId')
+        // Se não conseguiu buscar, tenta criar um objeto mínimo
+        // Isso pode não funcionar se a API exigir validação do paciente
+        consultaCompleta.paciente = {
+          id: idNumero,
+        }
+        consultaCompleta.pacienteId = idNumero
+        console.warn('⚠️ Paciente não encontrado, usando objeto mínimo com ID:', idNumero)
       }
 
       console.log('📤 Payload completo que será enviado:')
