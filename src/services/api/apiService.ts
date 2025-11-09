@@ -285,33 +285,39 @@ export const consultaService = {
         throw new APIError('Dados incompletos para criar consulta', HttpStatus.BAD_REQUEST)
       }
 
-      // Tenta converter o ID para número (a API Java pode esperar Long)
+      // Converte o ID para número (a API Java espera Long)
       const idNumero = Number(usuarioId)
-      const idFinal = !isNaN(idNumero) && idNumero > 0 ? idNumero : usuarioId
+      
+      if (isNaN(idNumero) || idNumero <= 0) {
+        throw new APIError(`ID do usuário inválido: ${usuarioId}`, HttpStatus.BAD_REQUEST)
+      }
 
-      console.log('🔑 ID original:', usuarioId, 'Tipo:', typeof usuarioId)
-      console.log('🔑 ID convertido:', idFinal, 'Tipo:', typeof idFinal)
+      console.log('🔑 ID do usuário:', usuarioId, '→ Convertido para número:', idNumero)
 
       // Tenta buscar o paciente primeiro (a API pode precisar do objeto completo)
       let pacienteData = null
       try {
         const pacienteResponse = await fetchWithTimeout(
-          `${API_BASE_URL}/pacientes/${usuarioId}`,
+          `${API_BASE_URL}/pacientes/${idNumero}`,
           { method: 'GET' },
           TIMEOUT
         )
         if (pacienteResponse.ok) {
           pacienteData = await handleResponse(pacienteResponse)
           console.log('👤 Paciente encontrado:', pacienteData)
+        } else {
+          console.warn('⚠️ Paciente não encontrado na API, status:', pacienteResponse.status)
+          const errorText = await pacienteResponse.text()
+          console.warn('⚠️ Detalhes do erro:', errorText)
         }
       } catch (error) {
-        console.warn('⚠️ Não foi possível buscar paciente, tentando apenas com ID:', error)
+        console.warn('⚠️ Erro ao buscar paciente:', error)
       }
 
       // Prepara o objeto da consulta
       // A API Java pode esperar:
-      // 1. pacienteId como número
-      // 2. Um objeto paciente completo
+      // 1. Apenas pacienteId (número)
+      // 2. Objeto paciente completo
       // 3. Ambos
       const consultaCompleta: any = {
         data: dadosConsulta.data,
@@ -321,24 +327,26 @@ export const consultaService = {
         local: dadosConsulta.local || 'IMREA - Unidade Vila Mariana',
         observacoes: dadosConsulta.observacoes || '',
         status: 'agendada',
+        pacienteId: idNumero, // Sempre envia como número
       }
 
-      // Adiciona o paciente - tenta diferentes formatos
+      // Se conseguiu buscar o paciente, adiciona o objeto também
+      // Algumas APIs Java esperam o objeto completo para validação
       if (pacienteData) {
-        // Se conseguiu buscar o paciente, usa o objeto completo
-        consultaCompleta.paciente = pacienteData
-        consultaCompleta.pacienteId = typeof idFinal === 'number' ? idFinal : Number(usuarioId) || usuarioId
-      } else {
-        // Se não conseguiu buscar, tenta apenas com ID
-        if (typeof idFinal === 'number') {
-          consultaCompleta.pacienteId = idFinal
-        } else {
-          const idNum = Number(usuarioId)
-          consultaCompleta.pacienteId = !isNaN(idNum) && idNum > 0 ? idNum : usuarioId
+        consultaCompleta.paciente = {
+          id: Number(pacienteData.id) || idNumero,
+          nome: pacienteData.nome || '',
+          email: pacienteData.email || '',
         }
+        console.log('👤 Objeto paciente adicionado ao payload')
+      } else {
+        console.warn('⚠️ Paciente não encontrado, enviando apenas pacienteId')
       }
 
-      console.log('📤 Enviando consulta para API:', JSON.stringify(consultaCompleta, null, 2))
+      console.log('📤 Payload completo que será enviado:')
+      console.log(JSON.stringify(consultaCompleta, null, 2))
+      console.log('🔍 Tipo do pacienteId:', typeof consultaCompleta.pacienteId)
+      console.log('🔍 Valor do pacienteId:', consultaCompleta.pacienteId)
 
       const response = await fetchWithTimeout(
         `${API_BASE_URL}/consultas`,
@@ -348,6 +356,22 @@ export const consultaService = {
         },
         TIMEOUT
       )
+      
+      // Log detalhado da resposta antes de processar
+      console.log('📥 Status da resposta:', response.status, response.statusText)
+      console.log('📥 Headers da resposta:', Object.fromEntries(response.headers.entries()))
+      
+      if (!response.ok) {
+        // Tenta ler o corpo da resposta de erro para debug
+        const errorText = await response.clone().text()
+        console.error('❌ Corpo da resposta de erro:', errorText)
+        try {
+          const errorJson = JSON.parse(errorText)
+          console.error('❌ Erro parseado:', errorJson)
+        } catch {
+          // Não é JSON, já logamos como texto
+        }
+      }
       
       const resultado = await handleResponse<Consulta>(response)
       console.log('✅ Consulta criada com sucesso:', resultado)
