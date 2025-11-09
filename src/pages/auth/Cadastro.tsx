@@ -38,7 +38,9 @@ const Cadastro: React.FC = () => {
       login(novoUsuario)
       navigate('/dashboard')
     } catch (error) {
-      setErro('Erro ao criar conta')
+      // Mostrar mensagem do erro quando disponível para facilitar diagnóstico (ex.: falha de conexão, timeout)
+      const msg = error instanceof Error ? error.message : String(error)
+      setErro(msg || 'Erro ao criar conta')
     }
   }
 
