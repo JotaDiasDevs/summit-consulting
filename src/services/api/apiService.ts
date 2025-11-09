@@ -286,15 +286,33 @@ export const consultaService = {
       }
 
       // Tenta converter o ID para número (a API Java pode esperar Long)
-      // Se o ID for um número válido, usa como número, senão mantém como string
       const idNumero = Number(usuarioId)
       const idFinal = !isNaN(idNumero) && idNumero > 0 ? idNumero : usuarioId
 
       console.log('🔑 ID original:', usuarioId, 'Tipo:', typeof usuarioId)
       console.log('🔑 ID convertido:', idFinal, 'Tipo:', typeof idFinal)
 
-      // Prepara o objeto da consulta - a API Java pode esperar pacienteId em vez de usuarioId
-      // Tenta diferentes formatos para compatibilidade
+      // Tenta buscar o paciente primeiro (a API pode precisar do objeto completo)
+      let pacienteData = null
+      try {
+        const pacienteResponse = await fetchWithTimeout(
+          `${API_BASE_URL}/pacientes/${usuarioId}`,
+          { method: 'GET' },
+          TIMEOUT
+        )
+        if (pacienteResponse.ok) {
+          pacienteData = await handleResponse(pacienteResponse)
+          console.log('👤 Paciente encontrado:', pacienteData)
+        }
+      } catch (error) {
+        console.warn('⚠️ Não foi possível buscar paciente, tentando apenas com ID:', error)
+      }
+
+      // Prepara o objeto da consulta
+      // A API Java pode esperar:
+      // 1. pacienteId como número
+      // 2. Um objeto paciente completo
+      // 3. Ambos
       const consultaCompleta: any = {
         data: dadosConsulta.data,
         horario: dadosConsulta.horario,
@@ -305,23 +323,22 @@ export const consultaService = {
         status: 'agendada',
       }
 
-      // Adiciona o ID do paciente/usuário - tenta diferentes formatos
-      // A API Java pode esperar pacienteId (número) ou um objeto paciente
-      if (typeof idFinal === 'number') {
-        consultaCompleta.pacienteId = idFinal
+      // Adiciona o paciente - tenta diferentes formatos
+      if (pacienteData) {
+        // Se conseguiu buscar o paciente, usa o objeto completo
+        consultaCompleta.paciente = pacienteData
+        consultaCompleta.pacienteId = typeof idFinal === 'number' ? idFinal : Number(usuarioId) || usuarioId
       } else {
-        // Se for string, tenta converter para número se possível
-        const idNum = Number(idFinal)
-        if (!isNaN(idNum) && idNum > 0) {
-          consultaCompleta.pacienteId = idNum
-        } else {
-          // Se não conseguir converter, mantém como string
+        // Se não conseguiu buscar, tenta apenas com ID
+        if (typeof idFinal === 'number') {
           consultaCompleta.pacienteId = idFinal
-          consultaCompleta.usuarioId = idFinal
+        } else {
+          const idNum = Number(usuarioId)
+          consultaCompleta.pacienteId = !isNaN(idNum) && idNum > 0 ? idNum : usuarioId
         }
       }
 
-      console.log('📤 Enviando consulta para API:', consultaCompleta)
+      console.log('📤 Enviando consulta para API:', JSON.stringify(consultaCompleta, null, 2))
 
       const response = await fetchWithTimeout(
         `${API_BASE_URL}/consultas`,
