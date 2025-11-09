@@ -24,7 +24,7 @@ const Dashboard: React.FC = () => {
         
         const consultasData = await apiService.buscarConsultasPorUsuario(usuario.id)
         
-        // Verifica se há dados e formata corretamente
+        
         if (Array.isArray(consultasData) && consultasData.length > 0) {
           const consultasOrdenadas = consultasData
             .filter(consulta => consulta && consulta.data && consulta.especialidade) // Filtra consultas válidas
@@ -50,7 +50,7 @@ const Dashboard: React.FC = () => {
       }
     }
 
-    // Adiciona um pequeno delay para evitar múltiplas chamadas
+    
     const timeoutId = setTimeout(carregarConsultas, 100)
     
     return () => clearTimeout(timeoutId)
@@ -151,7 +151,7 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Horário */}
+                  
                   <div className="flex items-center gap-3 bg-purple-50 p-4 rounded-lg">
                     <span className="text-3xl">🕐</span>
                     <div>

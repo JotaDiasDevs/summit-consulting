@@ -3,9 +3,10 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, Link } from 'react-router-dom'
 import type { CadastroFormData } from '../../types/auth'
 import { useAuth } from '../../contexts/auth/AuthContext'
-import { apiService } from '../../services/api/apiService'
+import { apiService, consultaService } from '../../services/api/apiService'
 import { APIError, HttpStatus } from '../../services/api/apiHelpers'
 import { API_CONFIG } from '../../config/api'
+import { gerarConsultasAleatorias } from '../../utils/gerarConsultasAleatorias'
 
 const Cadastro: React.FC = () => {
   const navigate = useNavigate()
@@ -46,6 +47,26 @@ const Cadastro: React.FC = () => {
       } catch (error) {
         // Fallback: tenta usar endpoint genérico se específico não existir
         novoUsuario = await apiService.criarUsuario(dadosCadastro as any)
+      }
+      
+      // Cria duas consultas aleatórias para o novo usuário
+      if (novoUsuario?.id) {
+        try {
+          const consultasAleatorias = gerarConsultasAleatorias(2)
+          
+          // Cria as consultas de forma assíncrona (não bloqueia o login)
+          Promise.all(
+            consultasAleatorias.map(consulta => 
+              consultaService.criar(novoUsuario.id, consulta).catch(err => {
+                console.warn('Erro ao criar consulta aleatória:', err)
+                // Não interrompe o fluxo se falhar ao criar consulta
+              })
+            )
+          )
+        } catch (error) {
+          console.warn('Erro ao criar consultas aleatórias:', error)
+          // Não interrompe o fluxo se falhar ao criar consultas
+        }
       }
       
       login(novoUsuario)
