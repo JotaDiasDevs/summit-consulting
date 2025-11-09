@@ -1,0 +1,91 @@
+{
+  "usuarios": [
+    {
+      "id": "1",
+      "nome": "João Silva",
+      "nomeUsuario": "joao.silva",
+      "email": "joao.silva@email.com"
+    },
+    {
+      "id": "2",
+      "nome": "Maria Santos",
+      "nomeUsuario": "maria.santos",
+      "email": "maria.santos@email.com"
+    },
+    {
+      "id": "140c",
+      "nome": "joao victor semente dias",
+      "nomeUsuario": "joao",
+      "email": "joaovitor.semente.d@gmail.com"
+    },
+    {
+      "id": "e9bf",
+      "nome": "joao victor semente dias",
+      "nomeUsuario": "joaov",
+      "email": "joaovitor.semente.d@hotmail.com"
+    },
+    {
+      "id": "fb1c",
+      "nome": "lucas",
+      "nomeUsuario": "lucas",
+      "email": "lucas@gmail.com"
+    }
+  ],
+  "consultas": [
+    {
+      "id": "1",
+      "usuarioId": "1",
+      "data": "2025-11-15",
+      "horario": "14:30",
+      "especialista": "Dr. Carlos Mendes",
+      "especialidade": "Fisioterapia",
+      "local": "IMREA - Unidade Vila Mariana",
+      "observacoes": "Trazer exames de ressonância",
+      "status": "agendada"
+    },
+    {
+      "id": "2",
+      "usuarioId": "1",
+      "data": "2025-11-20",
+      "horario": "10:00",
+      "especialista": "Dra. Ana Paula Souza",
+      "especialidade": "Ortopedia",
+      "local": "IMREA - Unidade Vila Mariana",
+      "observacoes": "Consulta de retorno",
+      "status": "agendada"
+    },
+    {
+      "id": "3",
+      "usuarioId": "2",
+      "data": "2025-11-12",
+      "horario": "09:00",
+      "especialista": "Dr. Roberto Alves",
+      "especialidade": "Neurologia",
+      "local": "IMREA - Unidade Butantã",
+      "observacoes": "Primeira consulta",
+      "status": "agendada"
+    },
+    {
+      "id": "4",
+      "usuarioId": "140c",
+      "data": "2025-11-18",
+      "horario": "15:00",
+      "especialista": "Dra. Fernanda Lima",
+      "especialidade": "Fisioterapia",
+      "local": "IMREA - Unidade Vila Mariana",
+      "observacoes": "Avaliação inicial",
+      "status": "agendada"
+    },
+    {
+      "id": "5",
+      "usuarioId": "140c",
+      "data": "2025-11-25",
+      "horario": "11:30",
+      "especialista": "Dr. Marcelo Costa",
+      "especialidade": "Terapia Ocupacional",
+      "local": "IMREA - Unidade Vila Mariana",
+      "observacoes": "Sessão de adaptação",
+      "status": "agendada"
+    }
+  ]
+}
