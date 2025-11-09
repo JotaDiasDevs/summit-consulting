@@ -11,30 +11,24 @@ const Cadastro: React.FC = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [erro, setErro] = React.useState('')
-  const [tipoUsuario, setTipoUsuario] = React.useState<'paciente' | 'medico'>('paciente')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<CadastroFormData>()
 
   const onSubmit = async (data: CadastroFormData) => {
     try {
       setErro('')
       
-      // Prepara os dados para cadastro
+      // Prepara os dados para cadastro (sempre como paciente)
       const dadosCadastro = {
         nome: data.nome,
         email: data.email,
         senha: data.senha,
-        tipo: tipoUsuario,
       }
 
-      // Tenta cadastrar usando o endpoint apropriado
-      // Se a API tiver endpoints específicos (/pacientes ou /medicos), use-os
-      // Caso contrário, use um endpoint genérico
+      // Tenta cadastrar usando o endpoint de pacientes
       let novoUsuario
       
       try {
-        // Tenta usar endpoint específico primeiro
-        const endpoint = tipoUsuario === 'paciente' ? '/pacientes' : '/medicos'
-        const response = await fetch(`${API_CONFIG.BASE_URL}${endpoint}`, {
+        const response = await fetch(`${API_CONFIG.BASE_URL}/pacientes`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(dadosCadastro),
@@ -53,11 +47,8 @@ const Cadastro: React.FC = () => {
         // Fallback: tenta usar endpoint genérico se específico não existir
         novoUsuario = await apiService.criarUsuario(dadosCadastro as any)
       }
-
-      // Adiciona o tipo ao usuário
-      const usuarioCompleto = { ...novoUsuario, tipo: tipoUsuario }
       
-      login(usuarioCompleto)
+      login(novoUsuario)
       navigate('/dashboard')
     } catch (error) {
       if (error instanceof APIError) {
@@ -86,32 +77,6 @@ const Cadastro: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Tipo de Usuário</label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="paciente"
-                  checked={tipoUsuario === 'paciente'}
-                  onChange={(e) => setTipoUsuario(e.target.value as 'paciente' | 'medico')}
-                  className="mr-2"
-                />
-                <span>Paciente</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="medico"
-                  checked={tipoUsuario === 'medico'}
-                  onChange={(e) => setTipoUsuario(e.target.value as 'paciente' | 'medico')}
-                  className="mr-2"
-                />
-                <span>Médico</span>
-              </label>
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-semibold mb-2">Nome Completo</label>
             <input

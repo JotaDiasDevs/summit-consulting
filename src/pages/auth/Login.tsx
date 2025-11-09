@@ -10,20 +10,16 @@ const Login: React.FC = () => {
   const navigate = useNavigate()
   const { login } = useAuth()
   const [erro, setErro] = React.useState('')
-  const [tipoUsuario, setTipoUsuario] = React.useState<'paciente' | 'medico'>('paciente')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormData>()
 
   const onSubmit = async (data: LoginFormData) => {
     try {
       setErro('')
       
-      // Chama o endpoint correto baseado no tipo de usuário
-      const usuario = await apiService.login(data.email, data.senha, tipoUsuario)
+      // Usa sempre o endpoint de paciente (tipo único)
+      const usuario = await apiService.loginPaciente(data.email, data.senha)
       
-      // Adiciona o tipo ao usuário
-      const usuarioCompleto = { ...usuario, tipo: tipoUsuario }
-      
-      login(usuarioCompleto)
+      login(usuario)
       navigate('/dashboard')
     } catch (error) {
       // Tratamento específico para erro 401 (credenciais inválidas)
@@ -53,32 +49,6 @@ const Login: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div>
-            <label className="block text-sm font-semibold mb-2">Tipo de Usuário</label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="paciente"
-                  checked={tipoUsuario === 'paciente'}
-                  onChange={(e) => setTipoUsuario(e.target.value as 'paciente' | 'medico')}
-                  className="mr-2"
-                />
-                <span>Paciente</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="medico"
-                  checked={tipoUsuario === 'medico'}
-                  onChange={(e) => setTipoUsuario(e.target.value as 'paciente' | 'medico')}
-                  className="mr-2"
-                />
-                <span>Médico</span>
-              </label>
-            </div>
-          </div>
-
           <div>
             <label className="block text-sm font-semibold mb-2">Email</label>
             <input

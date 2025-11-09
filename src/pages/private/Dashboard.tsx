@@ -13,28 +13,47 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const carregarConsultas = async () => {
-      if (!usuario?.id) return
+      if (!usuario?.id) {
+        setCarregando(false)
+        return
+      }
       
       try {
         setCarregando(true)
+        setErro('')
+        
         const consultasData = await apiService.buscarConsultasPorUsuario(usuario.id)
         
-        const consultasOrdenadas = consultasData.sort((a, b) => {
-          const dataA = new Date(`${a.data}T${a.horario}`).getTime()
-          const dataB = new Date(`${b.data}T${b.horario}`).getTime()
-          return dataA - dataB
-        })
-        setConsultas(consultasOrdenadas)
-        setErro('')
+        // Verifica se há dados e formata corretamente
+        if (Array.isArray(consultasData) && consultasData.length > 0) {
+          const consultasOrdenadas = consultasData
+            .filter(consulta => consulta && consulta.data && consulta.especialidade) // Filtra consultas válidas
+            .sort((a, b) => {
+              try {
+                const dataA = new Date(`${a.data}T${a.horario || '00:00'}`).getTime()
+                const dataB = new Date(`${b.data}T${b.horario || '00:00'}`).getTime()
+                return dataA - dataB
+              } catch {
+                return 0
+              }
+            })
+          setConsultas(consultasOrdenadas)
+        } else {
+          setConsultas([])
+        }
       } catch (error) {
         console.error('Erro ao carregar consultas:', error)
         setErro('Erro ao carregar suas consultas. Tente novamente mais tarde.')
+        setConsultas([])
       } finally {
         setCarregando(false)
       }
     }
 
-    carregarConsultas()
+    // Adiciona um pequeno delay para evitar múltiplas chamadas
+    const timeoutId = setTimeout(carregarConsultas, 100)
+    
+    return () => clearTimeout(timeoutId)
   }, [usuario?.id])
 
   const getEspecialidadeIcon = (especialidade: string): string => {
@@ -105,10 +124,10 @@ const Dashboard: React.FC = () => {
                     </div>
                     <div>
                       <h3 className="text-2xl font-bold text-gray-800 mb-1">
-                        {consulta.especialidade}
+                        {consulta.especialidade || 'Especialidade não informada'}
                       </h3>
                       <p className="text-lg text-gray-600">
-                        {consulta.especialista}
+                        {consulta.especialista || 'Especialista não informado'}
                       </p>
                     </div>
                   </div>
@@ -127,7 +146,7 @@ const Dashboard: React.FC = () => {
                         DATA
                       </p>
                       <p className="text-xl font-bold text-gray-800">
-                        {formatarData(consulta.data)}
+                        {consulta.data ? formatarData(consulta.data) : 'Data não informada'}
                       </p>
                     </div>
                   </div>
@@ -140,7 +159,7 @@ const Dashboard: React.FC = () => {
                         HORÁRIO
                       </p>
                       <p className="text-xl font-bold text-gray-800">
-                        {consulta.horario}
+                        {consulta.horario || 'Horário não informado'}
                       </p>
                     </div>
                   </div>
