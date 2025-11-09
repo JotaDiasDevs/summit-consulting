@@ -244,18 +244,26 @@ export const consultaService = {
         throw new APIError('ID do usuário é obrigatório', HttpStatus.BAD_REQUEST)
       }
 
-      let url = `${API_BASE_URL}/consultas?usuarioId=${usuarioId}`
+      // Garante que o ID seja string para a URL
+      const idString = String(usuarioId)
+      let url = `${API_BASE_URL}/consultas?usuarioId=${encodeURIComponent(idString)}`
       if (status) {
         url += `&status=${encodeURIComponent(status)}`
       }
+
+      console.log('🌐 URL da requisição de consultas:', url)
 
       const response = await fetchWithTimeout(
         url,
         { method: 'GET' },
         TIMEOUT
       )
-      return handleResponse<Consulta[]>(response)
+      
+      const data = await handleResponse<Consulta[]>(response)
+      console.log('📥 Resposta da API de consultas:', data)
+      return data
     } catch (error) {
+      console.error('❌ Erro ao buscar consultas:', error)
       if (error instanceof APIError) {
         throw error
       }

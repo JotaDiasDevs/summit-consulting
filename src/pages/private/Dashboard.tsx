@@ -22,19 +22,29 @@ const Dashboard: React.FC = () => {
         setCarregando(true)
         setErro('')
         
-        console.log('🔍 Buscando consultas para usuário ID:', usuario.id)
+        // Garante que o ID seja string (pode vir como number da API)
+        const usuarioId = usuario.id ? String(usuario.id) : ''
+        console.log('🔍 Buscando consultas para usuário ID:', usuarioId, 'Tipo:', typeof usuarioId)
+        console.log('👤 Dados completos do usuário:', usuario)
+        
+        if (!usuarioId) {
+          console.warn('⚠️ Usuário sem ID válido')
+          setCarregando(false)
+          return
+        }
         
         // Busca consultas do usuário (sem filtro de status para pegar todas)
         let consultasData: Consulta[] = []
         try {
           // Busca todas as consultas do usuário (sem filtro de status)
-          consultasData = await consultaService.buscarPorUsuario(usuario.id)
+          consultasData = await consultaService.buscarPorUsuario(usuarioId)
           console.log('📋 Consultas recebidas da API:', consultasData)
+          console.log('📊 Total de consultas:', consultasData.length)
         } catch (error) {
           console.warn('⚠️ Erro ao buscar consultas, tentando método alternativo:', error)
           // Fallback: tenta com o método antigo
           try {
-            consultasData = await apiService.buscarConsultasPorUsuario(usuario.id)
+            consultasData = await apiService.buscarConsultasPorUsuario(usuarioId)
             console.log('📋 Consultas recebidas (método alternativo):', consultasData)
           } catch (error2) {
             console.error('❌ Erro ao buscar consultas:', error2)

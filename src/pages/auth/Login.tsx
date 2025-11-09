@@ -19,7 +19,17 @@ const Login: React.FC = () => {
       // Usa sempre o endpoint de paciente (tipo único)
       const usuario = await apiService.loginPaciente(data.email, data.senha)
       
-      login(usuario)
+      console.log('✅ Login bem-sucedido. Usuário retornado:', usuario)
+      console.log('🔑 ID do usuário:', usuario.id, 'Tipo:', typeof usuario.id)
+      
+      // Garante que o ID seja string (pode vir como number da API)
+      const usuarioComIdCorrigido = {
+        ...usuario,
+        id: usuario.id ? String(usuario.id) : usuario.id
+      }
+      
+      console.log('💾 Salvando usuário no localStorage:', usuarioComIdCorrigido)
+      login(usuarioComIdCorrigido)
       navigate('/dashboard')
     } catch (error) {
       // Tratamento específico para erro 401 (credenciais inválidas)

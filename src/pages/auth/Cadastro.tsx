@@ -49,22 +49,36 @@ const Cadastro: React.FC = () => {
         novoUsuario = await apiService.criarUsuario(dadosCadastro as any)
       }
       
+      // Garante que o ID seja string (pode vir como number da API)
+      if (novoUsuario?.id) {
+        novoUsuario.id = String(novoUsuario.id)
+      }
+      
+      console.log('✅ Usuário criado:', novoUsuario)
+      console.log('🔑 ID do usuário (string):', novoUsuario?.id, 'Tipo:', typeof novoUsuario?.id)
+      
       // Cria duas consultas aleatórias para o novo usuário
       if (novoUsuario?.id) {
         try {
           const consultasAleatorias = gerarConsultasAleatorias(2)
+          console.log('📅 Criando consultas aleatórias para usuário ID:', novoUsuario.id)
           
           // Aguarda a criação das consultas antes de fazer login
-          await Promise.all(
-            consultasAleatorias.map(consulta => 
-              consultaService.criar(novoUsuario.id, consulta).catch(err => {
-                console.warn('Erro ao criar consulta aleatória:', err)
-                // Não interrompe o fluxo se falhar ao criar consulta
-                return null
-              })
+          const consultasCriadas = await Promise.all(
+            consultasAleatorias.map((consulta, index) => 
+              consultaService.criar(novoUsuario.id, consulta)
+                .then(result => {
+                  console.log(`✅ Consulta ${index + 1} criada:`, result)
+                  return result
+                })
+                .catch(err => {
+                  console.warn(`❌ Erro ao criar consulta ${index + 1}:`, err)
+                  // Não interrompe o fluxo se falhar ao criar consulta
+                  return null
+                })
             )
           )
-          console.log('✅ Consultas aleatórias criadas com sucesso')
+          console.log('✅ Total de consultas criadas:', consultasCriadas.filter(c => c !== null).length)
         } catch (error) {
           console.warn('Erro ao criar consultas aleatórias:', error)
           // Não interrompe o fluxo se falhar ao criar consultas
