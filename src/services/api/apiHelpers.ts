@@ -7,10 +7,7 @@ export class APIError extends Error {
   ) {
     super(message)
     this.name = 'APIError'
-    // Garante que a stack trace seja preservada (compatível com navegadores)
-    if (typeof Error.captureStackTrace === 'function') {
-      Error.captureStackTrace(this, APIError)
-    }
+    // Stack trace é preservado automaticamente pelo JavaScript
   }
 }
 
