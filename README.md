@@ -28,7 +28,7 @@ npm install
 
 ## 🎯 Como Executar
 
-### Terminal 1 - JSON Server:
+### Terminal 1 - JSON Server (Desenvolvimento Local):
 ```bash
 npm run json-server
 ```
@@ -39,6 +39,49 @@ npm run dev
 ```
 
 Acesse: http://localhost:5173
+
+## 🔌 Configuração da API Java
+
+Para integrar com a API Java remota, você precisa configurar a variável de ambiente `VITE_API_URL`.
+
+### 1. Criar arquivo `.env` na raiz do projeto:
+
+```env
+# URL da sua API Java publicada
+VITE_API_URL=https://sua-api-java.com/api
+
+# Timeout opcional (padrão: 10000ms)
+VITE_API_TIMEOUT=10000
+```
+
+### 2. Exemplos de URLs:
+
+- **Heroku**: `https://sua-api.herokuapp.com/api`
+- **Railway**: `https://sua-api.railway.app/api`
+- **Render**: `https://sua-api.onrender.com/api`
+- **Local**: `http://localhost:8080/api`
+
+### 3. Após configurar, reinicie o servidor de desenvolvimento:
+
+```bash
+npm run dev
+```
+
+### 4. Verificação:
+
+No console do navegador (modo desenvolvimento), você verá a configuração da API sendo carregada.
+
+**Nota**: O projeto está preparado para consumir APIs REST com os seguintes endpoints:
+- `GET /usuarios` - Listar usuários
+- `GET /usuarios/:id` - Buscar usuário por ID
+- `POST /usuarios` - Criar usuário
+- `PUT /usuarios/:id` - Atualizar usuário
+- `DELETE /usuarios/:id` - Deletar usuário
+- `GET /consultas` - Listar consultas
+- `GET /consultas/:id` - Buscar consulta por ID
+- `POST /consultas` - Criar consulta
+- `PUT /consultas/:id` - Atualizar consulta
+- `DELETE /consultas/:id` - Deletar consulta
 
 ## 🧪 Testar Login
 
@@ -59,7 +102,10 @@ Ou criar novo usuário na página de Cadastro!
 ✅ 5 páginas públicas (Home, Sobre, Integrantes, FAQ, Contato)
 ✅ Sistema de autenticação (Login e Cadastro)
 ✅ Dashboard protegido
-✅ API integration com json-server
+✅ API integration com json-server e suporte para API Java remota
+✅ CRUD completo (GET, POST, PUT, DELETE) para Usuários e Consultas
+✅ Tratamento robusto de erros HTTP com mensagens amigáveis
+✅ Manipulação correta de dados com validação e tipagem
 ✅ Responsividade em 5 breakpoints
 ✅ TypeScript com tipos completos
 ✅ Validação com React Hook Form

@@ -39,9 +39,7 @@ module.exports = async (req, res) => {
       const data = await getBody()
       const id = String(Date.now())
       const novoUsuario = { id, ...data }
-      // Nota: não persistimos em disco (filesystem do ambiente serverless é efêmero/
-      // provavelmente somente leitura em produção). Retornamos o usuário criado para
-      // que o front-end possa seguir o fluxo (login imediato após cadastro).
+
       res.status(201).json(novoUsuario)
     } catch (err) {
       res.status(400).json({ message: 'Corpo inválido' })
