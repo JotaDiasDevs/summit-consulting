@@ -61,28 +61,39 @@ const Cadastro: React.FC = () => {
       if (novoUsuario?.id) {
         try {
           const consultasAleatorias = gerarConsultasAleatorias(2)
-          console.log('📅 Criando consultas aleatórias para usuário ID:', novoUsuario.id)
+          const usuarioIdParaConsulta = novoUsuario.id
+          
+          console.log('📅 Criando consultas aleatórias para usuário ID:', usuarioIdParaConsulta)
+          console.log('📋 Dados das consultas a serem criadas:', consultasAleatorias)
           
           // Aguarda a criação das consultas antes de fazer login
           const consultasCriadas = await Promise.all(
-            consultasAleatorias.map((consulta, index) => 
-              consultaService.criar(novoUsuario.id, consulta)
+            consultasAleatorias.map((consulta, index) => {
+              console.log(`🔄 Tentando criar consulta ${index + 1} com ID:`, usuarioIdParaConsulta)
+              return consultaService.criar(usuarioIdParaConsulta, consulta)
                 .then(result => {
-                  console.log(`✅ Consulta ${index + 1} criada:`, result)
+                  console.log(`✅ Consulta ${index + 1} criada com sucesso:`, result)
                   return result
                 })
                 .catch(err => {
-                  console.warn(`❌ Erro ao criar consulta ${index + 1}:`, err)
+                  console.error(`❌ Erro ao criar consulta ${index + 1}:`, err)
+                  console.error('📤 Dados que foram enviados:', {
+                    usuarioId: usuarioIdParaConsulta,
+                    consulta: consulta
+                  })
                   // Não interrompe o fluxo se falhar ao criar consulta
                   return null
                 })
-            )
+            })
           )
-          console.log('✅ Total de consultas criadas:', consultasCriadas.filter(c => c !== null).length)
+          const consultasSucesso = consultasCriadas.filter(c => c !== null).length
+          console.log('✅ Total de consultas criadas:', consultasSucesso, 'de', consultasAleatorias.length)
         } catch (error) {
-          console.warn('Erro ao criar consultas aleatórias:', error)
+          console.error('❌ Erro geral ao criar consultas aleatórias:', error)
           // Não interrompe o fluxo se falhar ao criar consultas
         }
+      } else {
+        console.warn('⚠️ Usuário sem ID, não é possível criar consultas')
       }
       
       login(novoUsuario)

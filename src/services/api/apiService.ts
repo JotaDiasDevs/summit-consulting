@@ -285,11 +285,43 @@ export const consultaService = {
         throw new APIError('Dados incompletos para criar consulta', HttpStatus.BAD_REQUEST)
       }
 
-      const consultaCompleta = {
-        ...dadosConsulta,
-        usuarioId,
-        status: 'agendada' as const,
+      // Tenta converter o ID para número (a API Java pode esperar Long)
+      // Se o ID for um número válido, usa como número, senão mantém como string
+      const idNumero = Number(usuarioId)
+      const idFinal = !isNaN(idNumero) && idNumero > 0 ? idNumero : usuarioId
+
+      console.log('🔑 ID original:', usuarioId, 'Tipo:', typeof usuarioId)
+      console.log('🔑 ID convertido:', idFinal, 'Tipo:', typeof idFinal)
+
+      // Prepara o objeto da consulta - a API Java pode esperar pacienteId em vez de usuarioId
+      // Tenta diferentes formatos para compatibilidade
+      const consultaCompleta: any = {
+        data: dadosConsulta.data,
+        horario: dadosConsulta.horario,
+        especialista: dadosConsulta.especialista,
+        especialidade: dadosConsulta.especialidade,
+        local: dadosConsulta.local || 'IMREA - Unidade Vila Mariana',
+        observacoes: dadosConsulta.observacoes || '',
+        status: 'agendada',
       }
+
+      // Adiciona o ID do paciente/usuário - tenta diferentes formatos
+      // A API Java pode esperar pacienteId (número) ou um objeto paciente
+      if (typeof idFinal === 'number') {
+        consultaCompleta.pacienteId = idFinal
+      } else {
+        // Se for string, tenta converter para número se possível
+        const idNum = Number(idFinal)
+        if (!isNaN(idNum) && idNum > 0) {
+          consultaCompleta.pacienteId = idNum
+        } else {
+          // Se não conseguir converter, mantém como string
+          consultaCompleta.pacienteId = idFinal
+          consultaCompleta.usuarioId = idFinal
+        }
+      }
+
+      console.log('📤 Enviando consulta para API:', consultaCompleta)
 
       const response = await fetchWithTimeout(
         `${API_BASE_URL}/consultas`,
@@ -299,8 +331,12 @@ export const consultaService = {
         },
         TIMEOUT
       )
-      return handleResponse<Consulta>(response)
+      
+      const resultado = await handleResponse<Consulta>(response)
+      console.log('✅ Consulta criada com sucesso:', resultado)
+      return resultado
     } catch (error) {
+      console.error('❌ Erro ao criar consulta:', error)
       if (error instanceof APIError) {
         throw error
       }
