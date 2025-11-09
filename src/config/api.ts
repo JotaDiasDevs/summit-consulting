@@ -1,9 +1,12 @@
 // Configurações da API
 // A URL da API pode ser configurada através da variável de ambiente VITE_API_URL
-// Exemplo: VITE_API_URL=https://sua-api-java.com/api
-// Se não definida, usa endpoints relativos em `/api` (para desenvolvimento local)
+// Exemplo: VITE_API_URL=https://clinica-api-production-1c4b.up.railway.app
+// Se não definida, usa a URL do Railway em produção ou `/api` em desenvolvimento
 export const API_CONFIG = {
-  BASE_URL: import.meta.env.VITE_API_URL?.trim() || '/api',
+  BASE_URL: import.meta.env.VITE_API_URL?.trim() || 
+    (import.meta.env.PROD 
+      ? 'https://clinica-api-production-1c4b.up.railway.app'
+      : '/api'),
   TIMEOUT: Number(import.meta.env.VITE_API_TIMEOUT) || 10000, // 10 segundos padrão
 }
 

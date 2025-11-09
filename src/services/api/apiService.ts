@@ -356,9 +356,111 @@ export const consultaService = {
   },
 }
 
+// ==================== SERVIÇOS DE AUTENTICAÇÃO ====================
+
+export const authService = {
+  /**
+   * POST - Login de paciente
+   */
+  async loginPaciente(email: string, senha: string): Promise<Usuario> {
+    try {
+      if (!email || !senha) {
+        throw new APIError('Email e senha são obrigatórios', HttpStatus.BAD_REQUEST)
+      }
+
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/pacientes/login`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ email, senha }),
+        },
+        TIMEOUT
+      )
+
+      // Verifica se a resposta é 200 (sucesso) ou 401 (não autorizado)
+      if (response.status === 401) {
+        throw new APIError('Credenciais inválidas', HttpStatus.UNAUTHORIZED)
+      }
+
+      if (!response.ok) {
+        throw new APIError('Erro ao fazer login', response.status)
+      }
+
+      const data = await handleResponse<Usuario>(response)
+      return data
+    } catch (error) {
+      if (error instanceof APIError) {
+        throw error
+      }
+      throw new APIError('Erro ao fazer login de paciente', HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+  },
+
+  /**
+   * POST - Login de médico
+   */
+  async loginMedico(email: string, senha: string): Promise<Usuario> {
+    try {
+      if (!email || !senha) {
+        throw new APIError('Email e senha são obrigatórios', HttpStatus.BAD_REQUEST)
+      }
+
+      const response = await fetchWithTimeout(
+        `${API_BASE_URL}/medicos/login`,
+        {
+          method: 'POST',
+          body: JSON.stringify({ email, senha }),
+        },
+        TIMEOUT
+      )
+
+      // Verifica se a resposta é 200 (sucesso) ou 401 (não autorizado)
+      if (response.status === 401) {
+        throw new APIError('Credenciais inválidas', HttpStatus.UNAUTHORIZED)
+      }
+
+      if (!response.ok) {
+        throw new APIError('Erro ao fazer login', response.status)
+      }
+
+      const data = await handleResponse<Usuario>(response)
+      return data
+    } catch (error) {
+      if (error instanceof APIError) {
+        throw error
+      }
+      throw new APIError('Erro ao fazer login de médico', HttpStatus.INTERNAL_SERVER_ERROR)
+    }
+  },
+
+  /**
+   * POST - Login genérico (paciente ou médico)
+   */
+  async login(email: string, senha: string, tipo: 'paciente' | 'medico'): Promise<Usuario> {
+    if (tipo === 'paciente') {
+      return this.loginPaciente(email, senha)
+    } else {
+      return this.loginMedico(email, senha)
+    }
+  },
+}
+
 // ==================== SERVIÇO PRINCIPAL (Mantém compatibilidade) ====================
 
 export const apiService = {
+  // Métodos de autenticação
+  async loginPaciente(email: string, senha: string): Promise<Usuario> {
+    return authService.loginPaciente(email, senha)
+  },
+
+  async loginMedico(email: string, senha: string): Promise<Usuario> {
+    return authService.loginMedico(email, senha)
+  },
+
+  async login(email: string, senha: string, tipo: 'paciente' | 'medico'): Promise<Usuario> {
+    return authService.login(email, senha, tipo)
+  },
+
   // Métodos de usuário (mantém compatibilidade com código existente)
   async buscarUsuarios(): Promise<Usuario[]> {
     return usuarioService.buscarTodos()
