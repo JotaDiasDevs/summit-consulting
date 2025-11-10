@@ -133,18 +133,25 @@ export function criarConsultaLocal(
   dadosConsulta: ConsultaFormData,
   usuarioEmail?: string
 ): Consulta {
+  // Validação dos dados antes de criar
+  if (!dadosConsulta.data || !dadosConsulta.especialidade || !dadosConsulta.especialista) {
+    throw new Error('Dados incompletos para criar consulta. Campos obrigatórios: data, especialidade, especialista')
+  }
+
   const consulta: Consulta = {
     id: gerarIdUnico(),
     usuarioId: String(usuarioId),
     usuarioEmail: usuarioEmail, // Salva o email para busca alternativa
-    data: dadosConsulta.data,
-    horario: dadosConsulta.horario,
-    especialista: dadosConsulta.especialista,
-    especialidade: dadosConsulta.especialidade,
-    local: dadosConsulta.local || 'IMREA - Unidade Vila Mariana',
-    observacoes: dadosConsulta.observacoes || '',
+    data: dadosConsulta.data.trim(),
+    horario: dadosConsulta.horario || '08:00',
+    especialista: dadosConsulta.especialista.trim(),
+    especialidade: dadosConsulta.especialidade.trim(),
+    local: dadosConsulta.local?.trim() || 'IMREA - Unidade Vila Mariana',
+    observacoes: dadosConsulta.observacoes?.trim() || '',
     status: 'agendada',
   }
+  
+  console.log('✅ Consulta validada e criada:', consulta)
 
   const todasConsultas = buscarConsultasLocais()
   todasConsultas.push(consulta)
