@@ -14,7 +14,17 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const carregarConsultas = async () => {
-      if (!usuario?.id) {
+      console.log('🔄 useEffect do Dashboard executado')
+      console.log('👤 Usuário atual:', usuario)
+      
+      if (!usuario) {
+        console.warn('⚠️ Usuário não está disponível')
+        setCarregando(false)
+        return
+      }
+      
+      if (!usuario.id) {
+        console.warn('⚠️ Usuário sem ID')
         setCarregando(false)
         return
       }
@@ -119,10 +129,16 @@ const Dashboard: React.FC = () => {
     }
 
     
-    const timeoutId = setTimeout(carregarConsultas, 100)
+    // Aguarda um pouco para garantir que o usuário foi carregado
+    const timeoutId = setTimeout(() => {
+      console.log('⏰ Timeout executado, carregando consultas...')
+      carregarConsultas()
+    }, 200)
     
-    return () => clearTimeout(timeoutId)
-  }, [usuario?.id])
+    return () => {
+      clearTimeout(timeoutId)
+    }
+  }, [usuario?.id, usuario])
 
   const getEspecialidadeIcon = (especialidade: string): string => {
     const especialidades: Record<string, string> = {

@@ -23,11 +23,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const usuarioSalvo = localStorage.getItem('usuario')
     if (usuarioSalvo) {
       try {
-        setUsuario(JSON.parse(usuarioSalvo))
+        const usuarioParsed = JSON.parse(usuarioSalvo)
+        // Garante que o ID seja string
+        if (usuarioParsed.id) {
+          usuarioParsed.id = String(usuarioParsed.id)
+        }
+        console.log('👤 Usuário carregado do localStorage:', usuarioParsed)
+        setUsuario(usuarioParsed)
       } catch (error) {
         console.error('Erro ao carregar usuário do localStorage:', error)
         localStorage.removeItem('usuario')
       }
+    } else {
+      console.log('📭 Nenhum usuário encontrado no localStorage')
     }
   }, [])
 
