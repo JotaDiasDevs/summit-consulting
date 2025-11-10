@@ -39,10 +39,16 @@ const Login: React.FC = () => {
       login(usuarioComIdCorrigido)
       navigate('/dashboard')
     } catch (error) {
-      // Tratamento específico para erro 401 (credenciais inválidas)
+      console.error('❌ Erro completo no login:', error)
+      
+      // Tratamento específico para diferentes tipos de erro
       if (error instanceof APIError) {
         if (error.status === HttpStatus.UNAUTHORIZED) {
           setErro('Email ou senha incorretos')
+        } else if (error.status === HttpStatus.INTERNAL_SERVER_ERROR) {
+          // Erro 500 - problema no servidor
+          setErro('Erro no servidor. Tente novamente mais tarde ou verifique se o serviço está disponível.')
+          console.error('❌ Erro 500 detalhado:', error.message)
         } else {
           setErro(error.message || 'Erro ao fazer login')
         }

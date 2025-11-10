@@ -479,14 +479,45 @@ export const authService = {
         throw new APIError('Email e senha são obrigatórios', HttpStatus.BAD_REQUEST)
       }
 
+      const payload = { email: email.trim(), senha: senha.trim() }
+      console.log('🔐 Tentando fazer login:', { email: payload.email, senha: '***' })
+      console.log('🌐 URL:', `${API_BASE_URL}/pacientes/login`)
+      console.log('📤 Payload:', JSON.stringify(payload))
+
       const response = await fetchWithTimeout(
         `${API_BASE_URL}/pacientes/login`,
         {
           method: 'POST',
-          body: JSON.stringify({ email, senha }),
+          body: JSON.stringify(payload),
         },
         TIMEOUT
       )
+
+      console.log('📥 Status da resposta:', response.status, response.statusText)
+
+      // Se for erro 500, tenta ler a mensagem de erro
+      if (response.status === 500) {
+        try {
+          const errorText = await response.clone().text()
+          console.error('❌ Erro 500 do servidor:', errorText)
+          let errorMessage = 'Erro interno do servidor ao fazer login'
+          try {
+            const errorJson = JSON.parse(errorText)
+            errorMessage = errorJson.message || errorJson.error || errorMessage
+          } catch {
+            // Se não for JSON, usa o texto
+            if (errorText) {
+              errorMessage = errorText
+            }
+          }
+          throw new APIError(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR)
+        } catch (err) {
+          if (err instanceof APIError) {
+            throw err
+          }
+          throw new APIError('Erro interno do servidor ao fazer login', HttpStatus.INTERNAL_SERVER_ERROR)
+        }
+      }
 
       // Verifica se a resposta é 200 (sucesso) ou 401 (não autorizado)
       if (response.status === 401) {
@@ -494,12 +525,16 @@ export const authService = {
       }
 
       if (!response.ok) {
+        const errorText = await response.clone().text()
+        console.error('❌ Erro na resposta:', response.status, errorText)
         throw new APIError('Erro ao fazer login', response.status)
       }
 
       const data = await handleResponse<Usuario>(response)
+      console.log('✅ Login bem-sucedido, dados recebidos:', data)
       return data
     } catch (error) {
+      console.error('❌ Erro ao fazer login de paciente:', error)
       if (error instanceof APIError) {
         throw error
       }
