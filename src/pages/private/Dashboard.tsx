@@ -15,50 +15,63 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const carregarConsultas = async () => {
       console.log('🔄 useEffect do Dashboard executado')
-      console.log('👤 Usuário atual:', usuario)
+      console.log('👤 Usuário do contexto:', usuario)
       
       // Aguarda um pouco para garantir que o usuário foi carregado do localStorage
-      await new Promise(resolve => setTimeout(resolve, 100))
+      await new Promise(resolve => setTimeout(resolve, 200))
       
-      if (!usuario) {
-        console.warn('⚠️ Usuário não está disponível')
-        // Tenta carregar do localStorage diretamente
+      // Tenta carregar usuário do localStorage se não estiver no contexto ou se não tiver ID
+      let usuarioFinal: typeof usuario = usuario
+      
+      if (!usuarioFinal || !usuarioFinal.id) {
+        console.warn('⚠️ Usuário não disponível no contexto ou sem ID, tentando carregar do localStorage...')
         try {
           const usuarioSalvo = localStorage.getItem('usuario')
           if (usuarioSalvo) {
             const usuarioParsed = JSON.parse(usuarioSalvo)
+            console.log('📦 Usuário encontrado no localStorage:', usuarioParsed)
+            
+            // Garante que o ID seja string
             if (usuarioParsed.id) {
-              console.log('✅ Usuário encontrado no localStorage, mas não no contexto')
-              // Não podemos setar diretamente, mas podemos usar os dados
               usuarioParsed.id = String(usuarioParsed.id)
-              // Vamos tentar buscar consultas mesmo assim
+              usuarioFinal = usuarioParsed as typeof usuario
+              if (usuarioFinal) {
+                console.log('✅ Usuário carregado do localStorage com ID:', usuarioFinal.id)
+              }
             } else {
-              console.error('❌ Usuário no localStorage sem ID:', usuarioParsed)
+              console.error('❌ Usuário no localStorage sem ID válido:', usuarioParsed)
               setCarregando(false)
+              setErro('Usuário sem ID válido. Faça login novamente.')
               return
             }
           } else {
+            console.error('❌ Nenhum usuário encontrado no localStorage')
             setCarregando(false)
+            setErro('Usuário não encontrado. Faça login novamente.')
             return
           }
         } catch (error) {
           console.error('❌ Erro ao carregar usuário do localStorage:', error)
           setCarregando(false)
+          setErro('Erro ao carregar dados do usuário.')
           return
         }
       }
       
       // Valida se o usuário tem ID válido
-      if (!usuario) {
+      if (!usuarioFinal || !usuarioFinal.id) {
+        console.error('❌ Usuário final sem ID válido:', usuarioFinal)
         setCarregando(false)
+        setErro('Usuário sem ID válido. Faça login novamente.')
         return
       }
       
-      const usuarioId = usuario.id ? String(usuario.id) : null
-      if (!usuarioId || usuarioId === 'null' || usuarioId === 'undefined') {
-        console.warn('⚠️ Usuário sem ID válido. ID:', usuarioId)
-        console.warn('👤 Dados completos do usuário:', usuario)
+      const usuarioId = String(usuarioFinal.id)
+      if (!usuarioId || usuarioId === 'null' || usuarioId === 'undefined' || usuarioId === '') {
+        console.error('❌ ID do usuário inválido:', usuarioId)
+        console.error('👤 Dados completos do usuário:', usuarioFinal)
         setCarregando(false)
+        setErro('ID do usuário inválido. Faça login novamente.')
         return
       }
       
@@ -67,13 +80,12 @@ const Dashboard: React.FC = () => {
         setErro('')
         
         // Garante que o ID seja string (já validado acima)
-        const usuarioIdFinal = String(usuario.id)
-        const usuarioEmail = usuario.email || ''
+        const usuarioIdFinal = usuarioId
+        const usuarioEmail = usuarioFinal.email || ''
         console.log('🔍 ===== INÍCIO DA BUSCA DE CONSULTAS =====')
         console.log('🔍 Buscando consultas para usuário ID:', usuarioIdFinal)
-        console.log('🔍 Tipo do ID original:', typeof usuario.id)
-        console.log('👤 Dados completos do usuário:', usuario)
-        console.log('👤 Nome do usuário:', usuario.nome)
+        console.log('👤 Dados completos do usuário:', usuarioFinal)
+        console.log('👤 Nome do usuário:', usuarioFinal.nome)
         console.log('👤 Email do usuário:', usuarioEmail)
         
         // Busca consultas do usuário (da API e do localStorage)
