@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../contexts/auth/AuthContext'
 import { apiService, consultaService } from '../../services/api/apiService'
+import { buscarConsultasPorUsuario as buscarConsultasLocais } from '../../services/local/consultaLocalService'
 import type { Consulta } from '../../types/common'
 import { formatarData } from '../../utils/dateFormat'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
@@ -33,25 +34,44 @@ const Dashboard: React.FC = () => {
           return
         }
         
-        // Busca consultas do usuário (sem filtro de status para pegar todas)
+        // Busca consultas do usuário (da API e do localStorage)
         let consultasData: Consulta[] = []
+        
+        // Primeiro, busca consultas locais (localStorage)
         try {
-          // Busca todas as consultas do usuário (sem filtro de status)
-          consultasData = await consultaService.buscarPorUsuario(usuarioId)
-          console.log('📋 Consultas recebidas da API:', consultasData)
-          console.log('📊 Total de consultas:', consultasData.length)
+          const consultasLocais = buscarConsultasLocais(usuarioId)
+          console.log('📋 Consultas locais encontradas:', consultasLocais.length)
+          consultasData.push(...consultasLocais)
         } catch (error) {
-          console.warn('⚠️ Erro ao buscar consultas, tentando método alternativo:', error)
+          console.warn('⚠️ Erro ao buscar consultas locais:', error)
+        }
+        
+        // Depois, tenta buscar da API (se disponível)
+        try {
+          const consultasApi = await consultaService.buscarPorUsuario(usuarioId)
+          console.log('📋 Consultas recebidas da API:', consultasApi.length)
+          // Adiciona consultas da API que não estão duplicadas
+          consultasApi.forEach(consultaApi => {
+            if (!consultasData.find(c => c.id === consultaApi.id)) {
+              consultasData.push(consultaApi)
+            }
+          })
+        } catch (error) {
+          console.warn('⚠️ Erro ao buscar consultas da API, usando apenas locais:', error)
           // Fallback: tenta com o método antigo
           try {
-            consultasData = await apiService.buscarConsultasPorUsuario(usuarioId)
-            console.log('📋 Consultas recebidas (método alternativo):', consultasData)
+            const consultasApiAlt = await apiService.buscarConsultasPorUsuario(usuarioId)
+            consultasApiAlt.forEach(consultaApi => {
+              if (!consultasData.find(c => c.id === consultaApi.id)) {
+                consultasData.push(consultaApi)
+              }
+            })
           } catch (error2) {
-            console.error('❌ Erro ao buscar consultas:', error2)
-            // Não lança erro, apenas define array vazio
-            consultasData = []
+            console.warn('⚠️ Erro ao buscar consultas (método alternativo):', error2)
           }
         }
+        
+        console.log('📊 Total de consultas (locais + API):', consultasData.length)
         
         if (Array.isArray(consultasData) && consultasData.length > 0) {
           const consultasOrdenadas = consultasData

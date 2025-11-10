@@ -3,10 +3,11 @@ import { useForm } from 'react-hook-form'
 import { useNavigate, Link } from 'react-router-dom'
 import type { CadastroFormData } from '../../types/auth'
 import { useAuth } from '../../contexts/auth/AuthContext'
-import { apiService, consultaService } from '../../services/api/apiService'
+import { apiService } from '../../services/api/apiService'
 import { APIError, HttpStatus } from '../../services/api/apiHelpers'
 import { API_CONFIG } from '../../config/api'
 import { gerarConsultasAleatorias } from '../../utils/gerarConsultasAleatorias'
+import { criarConsultasLocais } from '../../services/local/consultaLocalService'
 
 const Cadastro: React.FC = () => {
   const navigate = useNavigate()
@@ -57,39 +58,21 @@ const Cadastro: React.FC = () => {
       console.log('✅ Usuário criado:', novoUsuario)
       console.log('🔑 ID do usuário (string):', novoUsuario?.id, 'Tipo:', typeof novoUsuario?.id)
       
-      // Cria duas consultas aleatórias para o novo usuário
+      // Cria duas consultas aleatórias localmente (sem usar a API)
       if (novoUsuario?.id) {
         try {
           const consultasAleatorias = gerarConsultasAleatorias(2)
           const usuarioIdParaConsulta = novoUsuario.id
           
-          console.log('📅 Criando consultas aleatórias para usuário ID:', usuarioIdParaConsulta)
+          console.log('📅 Criando consultas aleatórias localmente para usuário ID:', usuarioIdParaConsulta)
           console.log('📋 Dados das consultas a serem criadas:', consultasAleatorias)
           
-          // Aguarda a criação das consultas antes de fazer login
-          const consultasCriadas = await Promise.all(
-            consultasAleatorias.map((consulta, index) => {
-              console.log(`🔄 Tentando criar consulta ${index + 1} com ID:`, usuarioIdParaConsulta)
-              return consultaService.criar(usuarioIdParaConsulta, consulta)
-                .then(result => {
-                  console.log(`✅ Consulta ${index + 1} criada com sucesso:`, result)
-                  return result
-                })
-                .catch(err => {
-                  console.error(`❌ Erro ao criar consulta ${index + 1}:`, err)
-                  console.error('📤 Dados que foram enviados:', {
-                    usuarioId: usuarioIdParaConsulta,
-                    consulta: consulta
-                  })
-                  // Não interrompe o fluxo se falhar ao criar consulta
-                  return null
-                })
-            })
-          )
-          const consultasSucesso = consultasCriadas.filter(c => c !== null).length
-          console.log('✅ Total de consultas criadas:', consultasSucesso, 'de', consultasAleatorias.length)
+          // Cria as consultas localmente no localStorage
+          const consultasCriadas = criarConsultasLocais(usuarioIdParaConsulta, consultasAleatorias)
+          console.log('✅ Total de consultas criadas localmente:', consultasCriadas.length)
+          console.log('📋 Consultas criadas:', consultasCriadas)
         } catch (error) {
-          console.error('❌ Erro geral ao criar consultas aleatórias:', error)
+          console.error('❌ Erro ao criar consultas locais:', error)
           // Não interrompe o fluxo se falhar ao criar consultas
         }
       } else {
