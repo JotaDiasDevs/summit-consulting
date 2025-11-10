@@ -467,146 +467,9 @@ export const consultaService = {
   },
 }
 
-// ==================== SERVIÇOS DE AUTENTICAÇÃO ====================
-
-export const authService = {
-  /**
-   * POST - Login de paciente
-   */
-  async loginPaciente(email: string, senha: string): Promise<Usuario> {
-    try {
-      if (!email || !senha) {
-        throw new APIError('Email e senha são obrigatórios', HttpStatus.BAD_REQUEST)
-      }
-
-      const payload = { email: email.trim(), senha: senha.trim() }
-      console.log('🔐 Tentando fazer login:', { email: payload.email, senha: '***' })
-      console.log('🌐 URL:', `${API_BASE_URL}/pacientes/login`)
-      console.log('📤 Payload:', JSON.stringify(payload))
-
-      const response = await fetchWithTimeout(
-        `${API_BASE_URL}/pacientes/login`,
-        {
-          method: 'POST',
-          body: JSON.stringify(payload),
-        },
-        TIMEOUT
-      )
-
-      console.log('📥 Status da resposta:', response.status, response.statusText)
-
-      // Se for erro 500, tenta ler a mensagem de erro
-      if (response.status === 500) {
-        try {
-          const errorText = await response.clone().text()
-          console.error('❌ Erro 500 do servidor:', errorText)
-          let errorMessage = 'Erro interno do servidor ao fazer login'
-          try {
-            const errorJson = JSON.parse(errorText)
-            errorMessage = errorJson.message || errorJson.error || errorMessage
-          } catch {
-            // Se não for JSON, usa o texto
-            if (errorText) {
-              errorMessage = errorText
-            }
-          }
-          throw new APIError(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR)
-        } catch (err) {
-          if (err instanceof APIError) {
-            throw err
-          }
-          throw new APIError('Erro interno do servidor ao fazer login', HttpStatus.INTERNAL_SERVER_ERROR)
-        }
-      }
-
-      // Verifica se a resposta é 200 (sucesso) ou 401 (não autorizado)
-      if (response.status === 401) {
-        throw new APIError('Credenciais inválidas', HttpStatus.UNAUTHORIZED)
-      }
-
-      if (!response.ok) {
-        const errorText = await response.clone().text()
-        console.error('❌ Erro na resposta:', response.status, errorText)
-        throw new APIError('Erro ao fazer login', response.status)
-      }
-
-      const data = await handleResponse<Usuario>(response)
-      console.log('✅ Login bem-sucedido, dados recebidos:', data)
-      return data
-    } catch (error) {
-      console.error('❌ Erro ao fazer login de paciente:', error)
-      if (error instanceof APIError) {
-        throw error
-      }
-      throw new APIError('Erro ao fazer login de paciente', HttpStatus.INTERNAL_SERVER_ERROR)
-    }
-  },
-
-  /**
-   * POST - Login de médico
-   */
-  async loginMedico(email: string, senha: string): Promise<Usuario> {
-    try {
-      if (!email || !senha) {
-        throw new APIError('Email e senha são obrigatórios', HttpStatus.BAD_REQUEST)
-      }
-
-      const response = await fetchWithTimeout(
-        `${API_BASE_URL}/medicos/login`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ email, senha }),
-        },
-        TIMEOUT
-      )
-
-      // Verifica se a resposta é 200 (sucesso) ou 401 (não autorizado)
-      if (response.status === 401) {
-        throw new APIError('Credenciais inválidas', HttpStatus.UNAUTHORIZED)
-      }
-
-      if (!response.ok) {
-        throw new APIError('Erro ao fazer login', response.status)
-      }
-
-      const data = await handleResponse<Usuario>(response)
-      return data
-    } catch (error) {
-      if (error instanceof APIError) {
-        throw error
-      }
-      throw new APIError('Erro ao fazer login de médico', HttpStatus.INTERNAL_SERVER_ERROR)
-    }
-  },
-
-  /**
-   * POST - Login genérico (paciente ou médico)
-   */
-  async login(email: string, senha: string, tipo: 'paciente' | 'medico'): Promise<Usuario> {
-    if (tipo === 'paciente') {
-      return this.loginPaciente(email, senha)
-    } else {
-      return this.loginMedico(email, senha)
-    }
-  },
-}
-
 // ==================== SERVIÇO PRINCIPAL (Mantém compatibilidade) ====================
 
 export const apiService = {
-  // Métodos de autenticação
-  async loginPaciente(email: string, senha: string): Promise<Usuario> {
-    return authService.loginPaciente(email, senha)
-  },
-
-  async loginMedico(email: string, senha: string): Promise<Usuario> {
-    return authService.loginMedico(email, senha)
-  },
-
-  async login(email: string, senha: string, tipo: 'paciente' | 'medico'): Promise<Usuario> {
-    return authService.login(email, senha, tipo)
-  },
-
   // Métodos de usuário (mantém compatibilidade com código existente)
   async buscarUsuarios(): Promise<Usuario[]> {
     return usuarioService.buscarTodos()
@@ -630,15 +493,6 @@ export const apiService = {
     dadosUsuario: Omit<Usuario, 'id'>
   ): Promise<Usuario> {
     return usuarioService.criar(dadosUsuario)
-  },
-
-  // Métodos de consulta (mantém compatibilidade com código existente)
-  async buscarConsultasPorUsuario(usuarioId: string): Promise<Consulta[]> {
-    return consultaService.buscarPorUsuario(usuarioId, 'agendada')
-  },
-
-  async buscarTodasConsultas(): Promise<Consulta[]> {
-    return consultaService.buscarTodas()
   },
 }
 

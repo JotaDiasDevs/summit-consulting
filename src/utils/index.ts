@@ -1,3 +1,2 @@
-export * from './dateFormat'
-export * from './gerarConsultasAleatorias'
+// Utilitários exportados
 
