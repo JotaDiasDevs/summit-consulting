@@ -3,7 +3,6 @@ import { useAuth } from '../../contexts/auth/AuthContext'
 import { apiService, consultaService } from '../../services/api/apiService'
 import { buscarConsultasPorUsuarioOuEmail } from '../../services/local/consultaLocalService'
 import type { Consulta } from '../../types/common'
-import { formatarData } from '../../utils/dateFormat'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
 
 const Dashboard: React.FC = () => {
@@ -230,18 +229,6 @@ const Dashboard: React.FC = () => {
     }
   }, [usuario?.id, usuario])
 
-  const getEspecialidadeIcon = (especialidade: string): string => {
-    const especialidades: Record<string, string> = {
-      'Fisioterapia': '🏃',
-      'Ortopedia': '🦴',
-      'Neurologia': '🧠',
-      'Terapia Ocupacional': '👋',
-      'Fonoaudiologia': '🗣️',
-      'Psicologia': '💭',
-    }
-    return especialidades[especialidade] || '🏥'
-  }
-
   if (carregando) {
     return <LoadingSpinner />
   }
@@ -284,87 +271,17 @@ const Dashboard: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {consultas.map((consulta) => (
-              <div
-                key={consulta.id}
-                className="bg-white rounded-xl shadow-lg border-2 border-gray-200 hover:shadow-xl transition-shadow p-8"
-              >
-                
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-4">
-                    <div className="text-5xl">
-                      {getEspecialidadeIcon(consulta.especialidade)}
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-800 mb-1">
-                        {consulta.especialidade || 'Especialidade não informada'}
-                      </h3>
-                      <p className="text-lg text-gray-600">
-                        {consulta.especialista || 'Especialista não informado'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-bold text-lg">
-                    Agendada
-                  </div>
-                </div>
-
-                
-                <div className="space-y-4">
-                  
-                  <div className="flex items-center gap-3 bg-blue-50 p-4 rounded-lg">
-                    <span className="text-3xl">📅</span>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-600 mb-1">
-                        DATA
-                      </p>
-                      <p className="text-xl font-bold text-gray-800">
-                        {consulta.data ? formatarData(consulta.data) : 'Data não informada'}
-                      </p>
-                    </div>
-                  </div>
-
-                  
-                  <div className="flex items-center gap-3 bg-purple-50 p-4 rounded-lg">
-                    <span className="text-3xl">🕐</span>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-600 mb-1">
-                        HORÁRIO
-                      </p>
-                      <p className="text-xl font-bold text-gray-800">
-                        {consulta.horario || 'Horário não informado'}
-                      </p>
-                    </div>
-                  </div>
-
-                  
-                  <div className="flex items-center gap-3 bg-orange-50 p-4 rounded-lg">
-                    <span className="text-3xl">📍</span>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-600 mb-1">
-                        LOCAL
-                      </p>
-                      <p className="text-xl font-bold text-gray-800">
-                        Sua consulta será on-line! O link para acesso será enviado 10 minutos antes do início da sua visita.
-                      </p>
-                    </div>
-                  </div>
-
-                  
-                  {consulta.observacoes && (
-                    <div className="bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-400">
-                      <p className="text-sm font-semibold text-gray-600 mb-2">
-                        📝 OBSERVAÇÕES
-                      </p>
-                      <p className="text-lg text-gray-800">
-                        {consulta.observacoes}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+          <div className="bg-green-50 rounded-xl p-12 text-center border-2 border-green-200 shadow-lg">
+            <div className="text-6xl mb-6">✅</div>
+            <p className="text-2xl font-semibold text-gray-800 mb-4">
+              Você possui consultas marcadas para breve
+            </p>
+            <p className="text-xl text-gray-700">
+              Acesse o Portal do Paciente em seu aplicativo e verifique os detalhes
+            </p>
+            <div className="mt-6 text-lg text-gray-600">
+              <p>Total de consultas agendadas: <span className="font-bold text-green-700">{consultas.length}</span></p>
+            </div>
           </div>
         )}
       </div>
