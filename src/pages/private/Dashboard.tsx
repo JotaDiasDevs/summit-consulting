@@ -141,32 +141,48 @@ const Dashboard: React.FC = () => {
         console.log('📋 Consultas brutas recebidas:', JSON.stringify(consultasData, null, 2))
         
         if (Array.isArray(consultasData) && consultasData.length > 0) {
-          // Validação simplificada - apenas verifica se a consulta existe e tem ID
+          // Validação MUITO simplificada - aceita qualquer consulta que tenha ID
+          // Se foi encontrada por email, deve ser exibida
           const consultasValidas = consultasData.filter(consulta => {
-            // Verifica apenas se a consulta existe e tem um ID
-            if (!consulta || !consulta.id) {
+            // Apenas verifica se a consulta existe e tem ID
+            if (!consulta) {
+              console.warn('⚠️ Consulta nula ou undefined filtrada')
+              return false
+            }
+            
+            if (!consulta.id) {
               console.warn('⚠️ Consulta sem ID filtrada:', consulta)
               return false
             }
             
-            // Se tiver pelo menos data OU especialidade, considera válida
-            const temDados = consulta.data || consulta.especialidade || consulta.especialista
-            
-            if (!temDados) {
-              console.warn('⚠️ Consulta sem dados básicos:', {
-                id: consulta.id,
-                temData: !!consulta.data,
-                temEspecialidade: !!consulta.especialidade,
-                temEspecialista: !!consulta.especialista,
-                consultaCompleta: consulta
-              })
-              return false
+            // Se tem ID, aceita (mesmo que alguns campos estejam vazios)
+            // Garante valores padrão para campos que podem estar faltando
+            if (!consulta.data) {
+              consulta.data = new Date().toISOString().split('T')[0]
+              console.log('📅 Data padrão adicionada à consulta:', consulta.id)
+            }
+            if (!consulta.especialidade) {
+              consulta.especialidade = 'Especialidade não informada'
+              console.log('🏥 Especialidade padrão adicionada à consulta:', consulta.id)
+            }
+            if (!consulta.especialista) {
+              consulta.especialista = 'Especialista não informado'
+              console.log('👨‍⚕️ Especialista padrão adicionado à consulta:', consulta.id)
+            }
+            if (!consulta.horario) {
+              consulta.horario = '08:00'
+              console.log('🕐 Horário padrão adicionado à consulta:', consulta.id)
+            }
+            if (!consulta.local) {
+              consulta.local = 'IMREA - Unidade Vila Mariana'
+              console.log('📍 Local padrão adicionado à consulta:', consulta.id)
             }
             
             return true
           })
           
-          console.log('✅ Consultas válidas após filtro simples:', consultasValidas.length)
+          console.log('✅ Consultas válidas após filtro (com valores padrão):', consultasValidas.length)
+          console.log('📋 Consultas após adicionar valores padrão:', JSON.stringify(consultasValidas, null, 2))
           
           // Ordena as consultas válidas
           const consultasOrdenadas = consultasValidas
