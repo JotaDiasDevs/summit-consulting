@@ -20,7 +20,7 @@ const Login: React.FC = () => {
       const usuario = await apiService.loginPaciente(data.email, data.senha)
       
       console.log('✅ Login bem-sucedido. Usuário retornado:', usuario)
-      console.log('🔑 ID do usuário:', usuario.id, 'Tipo:', typeof usuario.id)
+      console.log('🔑 ID do usuário original:', usuario.id, 'Tipo:', typeof usuario.id)
       
       // Garante que o ID seja string (pode vir como number da API)
       const usuarioComIdCorrigido = {
@@ -28,7 +28,14 @@ const Login: React.FC = () => {
         id: usuario.id ? String(usuario.id) : usuario.id
       }
       
+      console.log('🔑 ID do usuário após conversão:', usuarioComIdCorrigido.id, 'Tipo:', typeof usuarioComIdCorrigido.id)
       console.log('💾 Salvando usuário no localStorage:', usuarioComIdCorrigido)
+      
+      // Verifica se há consultas locais para este usuário antes de fazer login
+      const { buscarConsultasPorUsuario } = await import('../../services/local/consultaLocalService')
+      const consultasExistentes = buscarConsultasPorUsuario(usuarioComIdCorrigido.id)
+      console.log('📋 Consultas locais encontradas para este usuário:', consultasExistentes.length)
+      
       login(usuarioComIdCorrigido)
       navigate('/dashboard')
     } catch (error) {

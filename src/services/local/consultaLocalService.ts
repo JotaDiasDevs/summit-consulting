@@ -19,9 +19,15 @@ export function buscarConsultasLocais(): Consulta[] {
   try {
     const consultasJson = localStorage.getItem(STORAGE_KEY)
     if (!consultasJson) {
+      console.log('📦 Nenhuma consulta encontrada no localStorage')
       return []
     }
-    return JSON.parse(consultasJson)
+    const consultas = JSON.parse(consultasJson)
+    console.log('📦 Total de consultas no localStorage:', consultas.length)
+    if (consultas.length > 0) {
+      console.log('📦 IDs únicos de usuários nas consultas:', [...new Set(consultas.map((c: Consulta) => c.usuarioId))])
+    }
+    return consultas
   } catch (error) {
     console.error('Erro ao buscar consultas locais:', error)
     return []
@@ -30,12 +36,31 @@ export function buscarConsultasLocais(): Consulta[] {
 
 /**
  * Busca consultas de um usuário específico
+ * Compara IDs de forma flexível (string ou número)
  */
-export function buscarConsultasPorUsuario(usuarioId: string): Consulta[] {
+export function buscarConsultasPorUsuario(usuarioId: string | number): Consulta[] {
   const todasConsultas = buscarConsultasLocais()
-  return todasConsultas.filter(
-    consulta => String(consulta.usuarioId) === String(usuarioId)
-  )
+  const idNormalizado = String(usuarioId)
+  
+  console.log('🔍 Buscando consultas locais para ID:', usuarioId, 'Tipo:', typeof usuarioId)
+  console.log('📋 Total de consultas no localStorage:', todasConsultas.length)
+  
+  const consultasEncontradas = todasConsultas.filter(consulta => {
+    const consultaIdNormalizado = String(consulta.usuarioId)
+    const match = consultaIdNormalizado === idNormalizado
+    if (!match) {
+      console.log('❌ ID não corresponde:', {
+        consultaId: consulta.usuarioId,
+        consultaIdNormalizado,
+        usuarioId,
+        idNormalizado
+      })
+    }
+    return match
+  })
+  
+  console.log('✅ Consultas encontradas para o usuário:', consultasEncontradas.length)
+  return consultasEncontradas
 }
 
 /**

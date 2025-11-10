@@ -25,8 +25,13 @@ const Dashboard: React.FC = () => {
         
         // Garante que o ID seja string (pode vir como number da API)
         const usuarioId = usuario.id ? String(usuario.id) : ''
-        console.log('🔍 Buscando consultas para usuário ID:', usuarioId, 'Tipo:', typeof usuarioId)
+        console.log('🔍 ===== INÍCIO DA BUSCA DE CONSULTAS =====')
+        console.log('🔍 Buscando consultas para usuário ID:', usuarioId)
+        console.log('🔍 Tipo do ID original:', typeof usuario.id)
+        console.log('🔍 ID convertido para string:', usuarioId)
         console.log('👤 Dados completos do usuário:', usuario)
+        console.log('👤 Nome do usuário:', usuario.nome)
+        console.log('👤 Email do usuário:', usuario.email)
         
         if (!usuarioId) {
           console.warn('⚠️ Usuário sem ID válido')
@@ -39,11 +44,18 @@ const Dashboard: React.FC = () => {
         
         // Primeiro, busca consultas locais (localStorage)
         try {
+          console.log('🔎 Iniciando busca de consultas locais no localStorage...')
           const consultasLocais = buscarConsultasLocais(usuarioId)
           console.log('📋 Consultas locais encontradas:', consultasLocais.length)
+          if (consultasLocais.length > 0) {
+            console.log('📋 Primeira consulta local encontrada:', consultasLocais[0])
+            console.log('📋 ID da primeira consulta:', consultasLocais[0].usuarioId)
+          } else {
+            console.warn('⚠️ Nenhuma consulta local encontrada para o ID:', usuarioId)
+          }
           consultasData.push(...consultasLocais)
         } catch (error) {
-          console.warn('⚠️ Erro ao buscar consultas locais:', error)
+          console.error('❌ Erro ao buscar consultas locais:', error)
         }
         
         // Depois, tenta buscar da API (se disponível)
