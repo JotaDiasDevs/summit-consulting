@@ -124,45 +124,56 @@ const Dashboard: React.FC = () => {
         }
         
         console.log('📊 Total de consultas (locais + API):', consultasData.length)
+        console.log('📋 Consultas brutas recebidas:', JSON.stringify(consultasData, null, 2))
         
         if (Array.isArray(consultasData) && consultasData.length > 0) {
-          const consultasOrdenadas = consultasData
-            .filter(consulta => {
-              // Validação mais robusta
-              if (!consulta) {
-                console.warn('⚠️ Consulta nula ou undefined filtrada')
-                return false
-              }
-              
-              const temData = consulta.data && consulta.data.trim() !== ''
-              const temEspecialidade = consulta.especialidade && consulta.especialidade.trim() !== ''
-              const temEspecialista = consulta.especialista && consulta.especialista.trim() !== ''
-              
-              const isValid = temData && temEspecialidade && temEspecialista
-              
-              if (!isValid) {
-                console.warn('⚠️ Consulta inválida filtrada:', {
-                  id: consulta.id,
-                  temData,
-                  temEspecialidade,
-                  temEspecialista,
-                  data: consulta.data,
-                  especialidade: consulta.especialidade,
-                  especialista: consulta.especialista
-                })
-              }
-              return isValid
-            })
+          // Validação simplificada - apenas verifica se a consulta existe e tem ID
+          const consultasValidas = consultasData.filter(consulta => {
+            // Verifica apenas se a consulta existe e tem um ID
+            if (!consulta || !consulta.id) {
+              console.warn('⚠️ Consulta sem ID filtrada:', consulta)
+              return false
+            }
+            
+            // Se tiver pelo menos data OU especialidade, considera válida
+            const temDados = consulta.data || consulta.especialidade || consulta.especialista
+            
+            if (!temDados) {
+              console.warn('⚠️ Consulta sem dados básicos:', {
+                id: consulta.id,
+                temData: !!consulta.data,
+                temEspecialidade: !!consulta.especialidade,
+                temEspecialista: !!consulta.especialista,
+                consultaCompleta: consulta
+              })
+              return false
+            }
+            
+            return true
+          })
+          
+          console.log('✅ Consultas válidas após filtro simples:', consultasValidas.length)
+          
+          // Ordena as consultas válidas
+          const consultasOrdenadas = consultasValidas
             .sort((a, b) => {
               try {
-                const dataA = new Date(`${a.data}T${a.horario || '00:00'}`).getTime()
-                const dataB = new Date(`${b.data}T${b.horario || '00:00'}`).getTime()
-                return dataA - dataB
-              } catch {
+                // Tenta ordenar por data se disponível
+                if (a.data && b.data) {
+                  const dataA = new Date(`${a.data}T${a.horario || '00:00'}`).getTime()
+                  const dataB = new Date(`${b.data}T${b.horario || '00:00'}`).getTime()
+                  return dataA - dataB
+                }
+                // Se não tiver data, mantém a ordem original
+                return 0
+              } catch (error) {
+                console.warn('⚠️ Erro ao ordenar consultas:', error)
                 return 0
               }
             })
-          console.log('✅ Consultas válidas após filtro:', consultasOrdenadas.length)
+          
+          console.log('✅ Consultas ordenadas e prontas para exibição:', consultasOrdenadas.length)
+          console.log('📋 Consultas finais:', JSON.stringify(consultasOrdenadas, null, 2))
           setConsultas(consultasOrdenadas)
         } else {
           console.log('ℹ️ Nenhuma consulta encontrada ou array vazio')

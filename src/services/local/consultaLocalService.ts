@@ -133,25 +133,26 @@ export function criarConsultaLocal(
   dadosConsulta: ConsultaFormData,
   usuarioEmail?: string
 ): Consulta {
-  // Validação dos dados antes de criar
-  if (!dadosConsulta.data || !dadosConsulta.especialidade || !dadosConsulta.especialista) {
-    throw new Error('Dados incompletos para criar consulta. Campos obrigatórios: data, especialidade, especialista')
+  // Validação simplificada - apenas verifica se tem dados mínimos
+  if (!dadosConsulta) {
+    throw new Error('Dados da consulta não fornecidos')
   }
 
+  // Garante valores padrão para campos opcionais
   const consulta: Consulta = {
     id: gerarIdUnico(),
     usuarioId: String(usuarioId),
-    usuarioEmail: usuarioEmail, // Salva o email para busca alternativa
-    data: dadosConsulta.data.trim(),
-    horario: dadosConsulta.horario || '08:00',
-    especialista: dadosConsulta.especialista.trim(),
-    especialidade: dadosConsulta.especialidade.trim(),
-    local: dadosConsulta.local?.trim() || 'IMREA - Unidade Vila Mariana',
-    observacoes: dadosConsulta.observacoes?.trim() || '',
+    usuarioEmail: usuarioEmail || undefined, // Salva o email para busca alternativa
+    data: dadosConsulta.data ? String(dadosConsulta.data).trim() : new Date().toISOString().split('T')[0],
+    horario: dadosConsulta.horario ? String(dadosConsulta.horario).trim() : '08:00',
+    especialista: dadosConsulta.especialista ? String(dadosConsulta.especialista).trim() : 'Especialista não informado',
+    especialidade: dadosConsulta.especialidade ? String(dadosConsulta.especialidade).trim() : 'Especialidade não informada',
+    local: dadosConsulta.local ? String(dadosConsulta.local).trim() : 'IMREA - Unidade Vila Mariana',
+    observacoes: dadosConsulta.observacoes ? String(dadosConsulta.observacoes).trim() : '',
     status: 'agendada',
   }
   
-  console.log('✅ Consulta validada e criada:', consulta)
+  console.log('✅ Consulta criada (validação simplificada):', JSON.stringify(consulta, null, 2))
 
   const todasConsultas = buscarConsultasLocais()
   todasConsultas.push(consulta)
