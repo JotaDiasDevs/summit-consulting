@@ -15,6 +15,7 @@ interface Estatisticas {
 
 const Dashboard: React.FC = () => {
   const { usuario } = useAuth()
+  const [usuarioFinal, setUsuarioFinal] = React.useState(usuario)
   const [estatisticas, setEstatisticas] = useState<Estatisticas>({
     totalPacientes: 0,
     totalMedicos: 0,
@@ -25,6 +26,55 @@ const Dashboard: React.FC = () => {
   })
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
+
+  // Carrega usuário do localStorage se não estiver no contexto
+  React.useEffect(() => {
+    const carregarUsuario = () => {
+      if (usuario) {
+        setUsuarioFinal(usuario)
+        console.log('👤 Usuário do contexto:', usuario)
+        return
+      }
+      
+      // Tenta carregar do localStorage
+      try {
+        const usuarioSalvo = localStorage.getItem('usuario')
+        if (usuarioSalvo) {
+          const usuarioParsed = JSON.parse(usuarioSalvo)
+          if (usuarioParsed.id) {
+            usuarioParsed.id = String(usuarioParsed.id)
+          }
+          // Garante que nome e nomeUsuario estejam presentes
+          if (!usuarioParsed.nome && usuarioParsed.nomeUsuario) {
+            usuarioParsed.nome = usuarioParsed.nomeUsuario
+          }
+          if (!usuarioParsed.nomeUsuario && usuarioParsed.nome) {
+            usuarioParsed.nomeUsuario = usuarioParsed.nome
+          }
+          setUsuarioFinal(usuarioParsed)
+          console.log('👤 Usuário carregado do localStorage:', usuarioParsed)
+          console.log('📋 Campos do usuário:', {
+            id: usuarioParsed.id,
+            nome: usuarioParsed.nome,
+            nomeUsuario: usuarioParsed.nomeUsuario,
+            email: usuarioParsed.email
+          })
+        } else {
+          console.warn('⚠️ Nenhum usuário encontrado no localStorage')
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar usuário do localStorage:', error)
+      }
+    }
+    
+    // Tenta carregar imediatamente
+    carregarUsuario()
+    
+    // Tenta novamente após um pequeno delay (caso o localStorage ainda não tenha sido atualizado)
+    const timeout = setTimeout(carregarUsuario, 100)
+    
+    return () => clearTimeout(timeout)
+  }, [usuario])
 
   useEffect(() => {
     const carregarEstatisticas = async () => {
@@ -104,7 +154,7 @@ const Dashboard: React.FC = () => {
         <div className="bg-green-50 rounded-lg p-6 border-l-4 border-green-600">
           <h2 className="text-3xl font-bold mb-2 text-gray-800">Bem-vindo! 👋</h2>
           <p className="text-xl text-gray-700">
-            Olá, <span className="font-bold text-green-700">{usuario?.nome}</span>! 
+            Olá, <span className="font-bold text-green-700">{usuarioFinal?.nome || 'Usuário'}</span>! 
             Aqui estão as estatísticas do sistema IMREA.
           </p>
         </div>
@@ -204,20 +254,22 @@ const Dashboard: React.FC = () => {
       {/* Informações do Usuário */}
       <div className="bg-gray-50 rounded-xl p-8 border-2 border-gray-200">
         <h3 className="text-3xl font-bold mb-6 text-gray-800">👤 Seus Dados</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">NOME COMPLETO</p>
-            <p className="text-xl font-bold text-gray-800">{usuario?.nome}</p>
+        {usuarioFinal ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <p className="text-sm font-semibold text-gray-600 mb-2">NOME DE USUÁRIO</p>
+              <p className="text-xl font-bold text-gray-800">{usuarioFinal.nomeUsuario || 'Não informado'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600 mb-2">E-MAIL</p>
+              <p className="text-xl font-bold text-gray-800 break-all">{usuarioFinal.email || 'Não informado'}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">USUÁRIO</p>
-            <p className="text-xl font-bold text-gray-800">{usuario?.nomeUsuario || 'N/A'}</p>
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-xl text-gray-600">Carregando dados do usuário...</p>
           </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">E-MAIL</p>
-            <p className="text-xl font-bold text-gray-800 break-all">{usuario?.email}</p>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   )

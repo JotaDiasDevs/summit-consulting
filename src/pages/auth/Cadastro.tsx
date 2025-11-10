@@ -67,7 +67,26 @@ const Acessar: React.FC = () => {
         novoUsuario.id = String(novoUsuario.id)
       }
       
+      // Garante que o nome seja preenchido (pode não vir da API)
+      if (!novoUsuario?.nome && novoUsuario?.nomeUsuario) {
+        novoUsuario.nome = novoUsuario.nomeUsuario
+      }
+      if (!novoUsuario?.nome && formData.nomeUsuario) {
+        novoUsuario.nome = formData.nomeUsuario
+      }
+      
+      // Garante que nomeUsuario esteja presente
+      if (!novoUsuario?.nomeUsuario && formData.nomeUsuario) {
+        novoUsuario.nomeUsuario = formData.nomeUsuario
+      }
+      
       console.log('✅ Acesso realizado:', novoUsuario)
+      console.log('📋 Dados completos do usuário:', {
+        id: novoUsuario?.id,
+        nome: novoUsuario?.nome,
+        nomeUsuario: novoUsuario?.nomeUsuario,
+        email: novoUsuario?.email
+      })
       
       login(novoUsuario)
       navigate('/dashboard')
