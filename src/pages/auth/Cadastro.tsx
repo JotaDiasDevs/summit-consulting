@@ -2,7 +2,7 @@ import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/auth/AuthContext'
 import { apiService } from '../../services/api/apiService'
-import { APIError, HttpStatus } from '../../services/api/apiHelpers'
+import { APIError } from '../../services/api/apiHelpers'
 import { API_CONFIG } from '../../config/api'
 
 interface AcessoFormData {
