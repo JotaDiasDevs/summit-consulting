@@ -91,12 +91,14 @@ const Dashboard: React.FC = () => {
         // Busca consultas do usuário (da API e do localStorage)
         let consultasData: Consulta[] = []
         
-        // Primeiro, busca consultas locais (localStorage) por ID ou email
+        // Primeiro, busca consultas locais (localStorage) - PRIORIZA EMAIL
         try {
           console.log('🔎 Iniciando busca de consultas locais no localStorage...')
+          console.log('📧 Buscando por email (prioridade):', usuarioEmail)
+          console.log('🆔 ID do usuário (fallback):', usuarioIdFinal)
           const consultasLocais = buscarConsultasPorUsuarioOuEmail(
             usuarioIdFinal,
-            usuarioEmail // Usa o email como fallback
+            usuarioEmail // Email tem prioridade sobre ID
           )
           console.log('📋 Consultas locais encontradas:', consultasLocais.length)
           if (consultasLocais.length > 0) {

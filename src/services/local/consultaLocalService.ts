@@ -73,6 +73,7 @@ export function buscarConsultasPorEmail(usuarioEmail: string): Consulta[] {
 
 /**
  * Busca consultas por ID ou email e atualiza o ID se necessário
+ * PRIORIZA BUSCA POR EMAIL (mais confiável que ID)
  */
 export function buscarConsultasPorUsuarioOuEmail(
   usuarioId: string | number,
@@ -80,19 +81,27 @@ export function buscarConsultasPorUsuarioOuEmail(
 ): Consulta[] {
   const idNormalizado = String(usuarioId)
   
-  // Primeiro tenta buscar por ID
-  let consultas = buscarConsultasPorUsuario(usuarioId)
+  // PRIORIZA BUSCA POR EMAIL (email é mais estável que ID)
+  let consultas: Consulta[] = []
   
-  // Se não encontrou por ID e tem email, tenta buscar por email
-  if (consultas.length === 0 && usuarioEmail) {
-    console.log('⚠️ Nenhuma consulta encontrada por ID, tentando buscar por email...')
+  if (usuarioEmail) {
+    console.log('🔍 Buscando consultas por EMAIL (prioridade):', usuarioEmail)
     const consultasPorEmail = buscarConsultasPorEmail(usuarioEmail)
     
     if (consultasPorEmail.length > 0) {
-      console.log('✅ Consultas encontradas por email, atualizando ID...')
-      // Atualiza o ID das consultas encontradas por email
+      console.log('✅ Consultas encontradas por email:', consultasPorEmail.length)
+      // Atualiza o ID das consultas encontradas por email para o ID atual
       consultas = atualizarIdConsultas(consultasPorEmail, idNormalizado)
+      console.log('✅ IDs das consultas atualizados para:', idNormalizado)
+    } else {
+      console.log('⚠️ Nenhuma consulta encontrada por email, tentando buscar por ID...')
+      // Se não encontrou por email, tenta por ID
+      consultas = buscarConsultasPorUsuario(usuarioId)
     }
+  } else {
+    // Se não tem email, busca apenas por ID
+    console.log('⚠️ Email não fornecido, buscando apenas por ID...')
+    consultas = buscarConsultasPorUsuario(usuarioId)
   }
   
   return consultas
