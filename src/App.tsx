@@ -8,8 +8,7 @@ import About from './pages/public/About'
 import Integrantes from './pages/public/Integrantes'
 import FAQ from './pages/public/FAQ'
 import Contact from './pages/public/Contact'
-import Login from './pages/auth/Login'
-import Cadastro from './pages/auth/Cadastro'
+import Acessar from './pages/auth/Cadastro'
 import Dashboard from './pages/private/Dashboard'
 
 function App() {
@@ -23,8 +22,7 @@ function App() {
             <Route path="/integrantes" element={<Integrantes />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/contato" element={<Contact />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/cadastro" element={<Acessar />} />
             <Route
               path="/dashboard"
               element={

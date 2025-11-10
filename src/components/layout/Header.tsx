@@ -55,20 +55,12 @@ const Header: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="flex space-x-2">
-              <Link
-                to="/login"
-                className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/cadastro"
-                className="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-              >
-                Cadastro
-              </Link>
-            </div>
+            <Link
+              to="/cadastro"
+              className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Acessar
+            </Link>
           )}
         </nav>
 
@@ -137,22 +129,13 @@ const Header: React.FC = () => {
               </button>
             </>
           ) : (
-            <>
-              <Link
-                to="/login"
-                className="block px-3 py-2 bg-green-600 text-white rounded text-center"
-                onClick={() => setMenuOpen(false)}
-              >
-                Entrar
-              </Link>
-              <Link
-                to="/cadastro"
-                className="block px-3 py-2 bg-blue-600 text-white rounded text-center"
-                onClick={() => setMenuOpen(false)}
-              >
-                Cadastro
-              </Link>
-            </>
+            <Link
+              to="/cadastro"
+              className="block px-3 py-2 bg-green-600 text-white rounded text-center"
+              onClick={() => setMenuOpen(false)}
+            >
+              Acessar
+            </Link>
           )}
         </nav>
       )}

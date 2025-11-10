@@ -11,7 +11,7 @@ const Home: React.FC = () => {
           <p className="text-xl mb-8">Plataforma inovadora de gerenciamento e consultoria</p>
           <div className="flex gap-4 justify-center">
             <Link
-              to="/login"
+              to="/cadastro"
               className="px-8 py-3 bg-white text-green-600 font-bold rounded hover:bg-gray-100"
             >
               Começar Agora
