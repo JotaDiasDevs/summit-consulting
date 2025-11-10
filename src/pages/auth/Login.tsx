@@ -47,7 +47,12 @@ const Login: React.FC = () => {
           setErro('Email ou senha incorretos')
         } else if (error.status === HttpStatus.INTERNAL_SERVER_ERROR) {
           // Erro 500 - problema no servidor
-          setErro('Erro no servidor. Tente novamente mais tarde ou verifique se o serviço está disponível.')
+          // Verifica se é o erro específico de múltiplos resultados
+          if (error.message && error.message.includes('Query did not return a unique result')) {
+            setErro('Erro: Existem múltiplas contas com este email no sistema. Entre em contato com o suporte.')
+          } else {
+            setErro('Erro no servidor. Tente novamente mais tarde ou verifique se o serviço está disponível.')
+          }
           console.error('❌ Erro 500 detalhado:', error.message)
         } else {
           setErro(error.message || 'Erro ao fazer login')
