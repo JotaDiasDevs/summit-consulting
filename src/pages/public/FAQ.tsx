@@ -6,7 +6,7 @@ const FAQ: React.FC = () => {
   const faqs = [
     {
       q: 'Como faço para acessar a plataforma Summit Consulting?',
-      a: 'Para acessar a plataforma, clique em "Acessar" no menu superior ou na página inicial. Você precisará informar seu nome de usuário, email e senha. Após o acesso, você será direcionado ao Dashboard com as estatísticas do sistema.',
+      a: 'Para acessar a plataforma, clique em "Acessar" no menu superior ou na página inicial. Você precisará informar seus dados de administrador. Após o acesso, você será direcionado ao Dashboard com as estatísticas do sistema.',
       icon: '🔐'
     },
     {
