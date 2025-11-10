@@ -1,3 +1,7 @@
+// Union Types explícitos
+export type StatusConsulta = 'agendada' | 'realizada' | 'cancelada'
+export type TipoEspecialidade = 'Fisioterapia' | 'Ortopedia' | 'Neurologia' | 'Terapia Ocupacional' | 'Fonoaudiologia' | 'Psicologia'
+
 // Tipos relacionados a consultas médicas
 export interface Consulta {
   id: string
@@ -9,7 +13,7 @@ export interface Consulta {
   especialidade: string
   local: string
   observacoes?: string
-  status: 'agendada' | 'realizada' | 'cancelada'
+  status: StatusConsulta
 }
 
 export interface ConsultaFormData {

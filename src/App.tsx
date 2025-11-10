@@ -10,6 +10,8 @@ import FAQ from './pages/public/FAQ'
 import Contact from './pages/public/Contact'
 import Acessar from './pages/auth/Cadastro'
 import Dashboard from './pages/private/Dashboard'
+import UsuarioDetalhes from './pages/private/UsuarioDetalhes'
+import ConsultaDetalhes from './pages/private/ConsultaDetalhes'
 
 function App() {
   return (
@@ -28,6 +30,23 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            {/* Rotas dinâmicas com parâmetros */}
+            <Route
+              path="/usuarios/:id"
+              element={
+                <ProtectedRoute>
+                  <UsuarioDetalhes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/consultas/:id"
+              element={
+                <ProtectedRoute>
+                  <ConsultaDetalhes />
                 </ProtectedRoute>
               }
             />

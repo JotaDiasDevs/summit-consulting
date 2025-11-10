@@ -264,6 +264,16 @@ const Dashboard: React.FC = () => {
               <p className="text-sm font-semibold text-gray-600 mb-2">E-MAIL</p>
               <p className="text-xl font-bold text-gray-800 break-all">{usuarioFinal.email || 'Não informado'}</p>
             </div>
+            {usuarioFinal.id && (
+              <div className="md:col-span-2">
+                <a
+                  href={`/usuarios/${usuarioFinal.id}`}
+                  className="inline-block px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Ver Detalhes Completos →
+                </a>
+              </div>
+            )}
           </div>
         ) : (
           <div className="text-center py-8">

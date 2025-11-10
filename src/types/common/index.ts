@@ -6,5 +6,19 @@ export interface ContactFormData {
   mensagem: string
 }
 
-export * from './consulta'
+// Intersection Types explícitos
+import type { Consulta } from './consulta'
+import type { Usuario } from '../auth'
 
+export type ConsultaComUsuario = Consulta & {
+  usuario: Usuario
+  usuarioNome?: string
+}
+
+export type ConsultaDetalhada = Consulta & {
+  usuario: Usuario
+  historico?: string[]
+  anexos?: string[]
+}
+
+export * from './consulta'
