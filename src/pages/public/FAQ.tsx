@@ -5,49 +5,49 @@ const FAQ: React.FC = () => {
 
   const faqs = [
     {
-      q: 'Como faço para ver minhas consultas no IMREA?',
-      a: 'Após fazer login na plataforma, acesse seu Dashboard. Lá você encontrará suas consultas agendadas com todas as informações: data, horário, especialista e local. Para agendar novas consultas, entre em contato com o IMREA diretamente.',
-      icon: '📅'
+      q: 'Como faço para acessar a plataforma Summit Consulting?',
+      a: 'Para acessar a plataforma, clique em "Acessar" no menu superior ou na página inicial. Você precisará informar seu nome de usuário, email e senha. Após o acesso, você será direcionado ao Dashboard com as estatísticas do sistema.',
+      icon: '🔐'
     },
     {
-      q: 'Tenho dificuldade para usar o celular. A plataforma é fácil de usar?',
-      a: 'Sim! Nossa plataforma foi desenvolvida especialmente para ser acessível e fácil de usar. Utilizamos textos grandes, cores contrastantes, ícones claros e um layout simples. Todos os elementos são grandes e fáceis de tocar, facilitando o uso por pessoas com dificuldades tecnológicas.',
+      q: 'O que posso ver no Dashboard?',
+      a: 'No Dashboard você encontrará estatísticas completas do sistema, incluindo: total de pacientes cadastrados, total de médicos, total de consultas marcadas, consultas agendadas, realizadas e canceladas. Além disso, você pode visualizar seus dados pessoais na seção "Seus Dados".',
+      icon: '📊'
+    },
+    {
+      q: 'A plataforma é fácil de usar?',
+      a: 'Sim! A Summit Consulting foi desenvolvida com foco em usabilidade e acessibilidade. Utilizamos interface intuitiva, textos claros, ícones visuais e um layout responsivo que se adapta a qualquer dispositivo. Todos os elementos são grandes e fáceis de usar.',
       icon: '📱'
     },
     {
-      q: 'Esqueci minha senha. Como faço?',
-      a: 'Entre em contato conosco através da página de Contato ou ligue para o suporte do IMREA. Nossa equipe irá ajudá-lo a recuperar o acesso à sua conta de forma segura.',
+      q: 'Como recupero meu acesso se esquecer minha senha?',
+      a: 'Entre em contato conosco através da página de Contato. Nossa equipe de suporte irá ajudá-lo a recuperar o acesso à sua conta de forma segura e rápida.',
       icon: '🔑'
     },
     {
       q: 'A plataforma é segura? Meus dados estão protegidos?',
-      a: 'Sim! Levamos a segurança dos seus dados muito a sério. Todas as informações são protegidas e apenas você e a equipe autorizada do IMREA têm acesso aos seus dados médicos e de consultas.',
+      a: 'Sim! A segurança dos dados é uma prioridade para a Summit Consulting. Todas as informações são protegidas com os mais altos padrões de segurança. Apenas usuários autorizados têm acesso aos dados do sistema.',
       icon: '🔒'
     },
     {
-      q: 'Posso usar a plataforma no computador também?',
-      a: 'Sim! A plataforma funciona tanto no celular quanto no computador ou tablet. Você pode acessar de qualquer dispositivo com internet. O layout se adapta automaticamente ao tamanho da tela.',
+      q: 'Posso acessar a plataforma de qualquer dispositivo?',
+      a: 'Sim! A plataforma Summit Consulting é totalmente responsiva e funciona perfeitamente em computadores, tablets e smartphones. O layout se adapta automaticamente ao tamanho da tela, proporcionando uma experiência otimizada em qualquer dispositivo.',
       icon: '💻'
     },
     {
-      q: 'Como recebo ajuda se tiver dúvidas sobre o uso da plataforma?',
-      a: 'Oferecemos suporte dedicado para ajudá-lo! Você pode entrar em contato através da página de Contato, ou ligar diretamente para o IMREA. Nossa equipe está disponível para auxiliar com qualquer dificuldade que você possa ter.',
+      q: 'Como recebo suporte se tiver dúvidas?',
+      a: 'Oferecemos suporte dedicado para ajudá-lo! Você pode entrar em contato através da página de Contato em nosso site. Nossa equipe está disponível para auxiliar com qualquer dúvida ou dificuldade que você possa ter ao usar a plataforma.',
       icon: '🆘'
     },
     {
-      q: 'O que faço se minha consulta aparecer com dados incorretos?',
-      a: 'Entre em contato imediatamente com o IMREA para corrigir as informações. É importante que os dados estejam corretos para que você não perca sua consulta. Ligue para a unidade onde sua consulta está agendada.',
-      icon: '✏️'
-    },
-    {
-      q: 'A plataforma funciona sem internet?',
-      a: 'Não, é necessário ter conexão com a internet para acessar a plataforma. Porém, uma vez que você visualize suas consultas, você pode anotá-las em um lugar seguro para consulta posterior.',
+      q: 'A plataforma funciona sem conexão com a internet?',
+      a: 'Não, é necessário ter conexão com a internet para acessar a plataforma Summit Consulting. Todos os dados são armazenados de forma segura na nuvem, garantindo acesso de qualquer lugar com internet.',
       icon: '🌐'
     },
     {
-      q: 'Posso cancelar ou remarcar uma consulta pela plataforma?',
-      a: 'Atualmente, para cancelar ou remarcar consultas, é necessário entrar em contato diretamente com o IMREA pelo telefone. A plataforma mostra suas consultas, mas as alterações devem ser feitas através do atendimento da instituição.',
-      icon: '🔄'
+      q: 'O que é a Summit Consulting?',
+      a: 'A Summit Consulting é uma plataforma inovadora de gerenciamento e consultoria. Desenvolvemos soluções que combinam excelência técnica com experiência do usuário excepcional, fornecendo ferramentas poderosas para gerenciar processos e dados de forma eficiente.',
+      icon: '🏢'
     },
   ]
 
