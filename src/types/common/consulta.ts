@@ -2,6 +2,7 @@
 export interface Consulta {
   id: string
   usuarioId: string
+  usuarioEmail?: string // Email do usuário para busca alternativa
   data: string // formato ISO: YYYY-MM-DD
   horario: string // formato HH:MM
   especialista: string

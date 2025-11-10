@@ -35,7 +35,7 @@ export function buscarConsultasLocais(): Consulta[] {
 }
 
 /**
- * Busca consultas de um usuário específico
+ * Busca consultas de um usuário específico por ID
  * Compara IDs de forma flexível (string ou número)
  */
 export function buscarConsultasPorUsuario(usuarioId: string | number): Consulta[] {
@@ -48,19 +48,81 @@ export function buscarConsultasPorUsuario(usuarioId: string | number): Consulta[
   const consultasEncontradas = todasConsultas.filter(consulta => {
     const consultaIdNormalizado = String(consulta.usuarioId)
     const match = consultaIdNormalizado === idNormalizado
-    if (!match) {
-      console.log('❌ ID não corresponde:', {
-        consultaId: consulta.usuarioId,
-        consultaIdNormalizado,
-        usuarioId,
-        idNormalizado
-      })
-    }
     return match
   })
   
-  console.log('✅ Consultas encontradas para o usuário:', consultasEncontradas.length)
+  console.log('✅ Consultas encontradas por ID:', consultasEncontradas.length)
   return consultasEncontradas
+}
+
+/**
+ * Busca consultas por email do usuário
+ */
+export function buscarConsultasPorEmail(usuarioEmail: string): Consulta[] {
+  const todasConsultas = buscarConsultasLocais()
+  
+  console.log('🔍 Buscando consultas locais para email:', usuarioEmail)
+  
+  const consultasEncontradas = todasConsultas.filter(consulta => {
+    return consulta.usuarioEmail && consulta.usuarioEmail.toLowerCase() === usuarioEmail.toLowerCase()
+  })
+  
+  console.log('✅ Consultas encontradas por email:', consultasEncontradas.length)
+  return consultasEncontradas
+}
+
+/**
+ * Busca consultas por ID ou email e atualiza o ID se necessário
+ */
+export function buscarConsultasPorUsuarioOuEmail(
+  usuarioId: string | number,
+  usuarioEmail?: string
+): Consulta[] {
+  const idNormalizado = String(usuarioId)
+  
+  // Primeiro tenta buscar por ID
+  let consultas = buscarConsultasPorUsuario(usuarioId)
+  
+  // Se não encontrou por ID e tem email, tenta buscar por email
+  if (consultas.length === 0 && usuarioEmail) {
+    console.log('⚠️ Nenhuma consulta encontrada por ID, tentando buscar por email...')
+    const consultasPorEmail = buscarConsultasPorEmail(usuarioEmail)
+    
+    if (consultasPorEmail.length > 0) {
+      console.log('✅ Consultas encontradas por email, atualizando ID...')
+      // Atualiza o ID das consultas encontradas por email
+      consultas = atualizarIdConsultas(consultasPorEmail, idNormalizado)
+    }
+  }
+  
+  return consultas
+}
+
+/**
+ * Atualiza o ID do usuário nas consultas
+ */
+function atualizarIdConsultas(consultas: Consulta[], novoId: string): Consulta[] {
+  const todasConsultas = buscarConsultasLocais()
+  
+  // Atualiza o ID nas consultas
+  consultas.forEach(consulta => {
+    consulta.usuarioId = novoId
+    // Atualiza também na lista completa
+    const index = todasConsultas.findIndex(c => c.id === consulta.id)
+    if (index !== -1) {
+      todasConsultas[index].usuarioId = novoId
+    }
+  })
+  
+  // Salva de volta no localStorage
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(todasConsultas))
+    console.log('✅ IDs das consultas atualizados para:', novoId)
+  } catch (error) {
+    console.error('Erro ao atualizar IDs das consultas:', error)
+  }
+  
+  return consultas
 }
 
 /**
@@ -68,11 +130,13 @@ export function buscarConsultasPorUsuario(usuarioId: string | number): Consulta[
  */
 export function criarConsultaLocal(
   usuarioId: string,
-  dadosConsulta: ConsultaFormData
+  dadosConsulta: ConsultaFormData,
+  usuarioEmail?: string
 ): Consulta {
   const consulta: Consulta = {
     id: gerarIdUnico(),
     usuarioId: String(usuarioId),
+    usuarioEmail: usuarioEmail, // Salva o email para busca alternativa
     data: dadosConsulta.data,
     horario: dadosConsulta.horario,
     especialista: dadosConsulta.especialista,
@@ -100,9 +164,10 @@ export function criarConsultaLocal(
  */
 export function criarConsultasLocais(
   usuarioId: string,
-  consultas: ConsultaFormData[]
+  consultas: ConsultaFormData[],
+  usuarioEmail?: string
 ): Consulta[] {
-  return consultas.map(consulta => criarConsultaLocal(usuarioId, consulta))
+  return consultas.map(consulta => criarConsultaLocal(usuarioId, consulta, usuarioEmail))
 }
 
 /**

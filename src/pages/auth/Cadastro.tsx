@@ -67,8 +67,12 @@ const Cadastro: React.FC = () => {
           console.log('📅 Criando consultas aleatórias localmente para usuário ID:', usuarioIdParaConsulta)
           console.log('📋 Dados das consultas a serem criadas:', consultasAleatorias)
           
-          // Cria as consultas localmente no localStorage
-          const consultasCriadas = criarConsultasLocais(usuarioIdParaConsulta, consultasAleatorias)
+          // Cria as consultas localmente no localStorage (com email para busca alternativa)
+          const consultasCriadas = criarConsultasLocais(
+            usuarioIdParaConsulta, 
+            consultasAleatorias,
+            novoUsuario.email // Salva o email para poder buscar depois
+          )
           console.log('✅ Total de consultas criadas localmente:', consultasCriadas.length)
           console.log('📋 Consultas criadas:', consultasCriadas)
         } catch (error) {

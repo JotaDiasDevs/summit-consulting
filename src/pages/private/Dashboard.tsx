@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../contexts/auth/AuthContext'
 import { apiService, consultaService } from '../../services/api/apiService'
-import { buscarConsultasPorUsuario as buscarConsultasLocais } from '../../services/local/consultaLocalService'
+import { buscarConsultasPorUsuarioOuEmail } from '../../services/local/consultaLocalService'
 import type { Consulta } from '../../types/common'
 import { formatarData } from '../../utils/dateFormat'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
@@ -52,16 +52,19 @@ const Dashboard: React.FC = () => {
         // Busca consultas do usuário (da API e do localStorage)
         let consultasData: Consulta[] = []
         
-        // Primeiro, busca consultas locais (localStorage)
+        // Primeiro, busca consultas locais (localStorage) por ID ou email
         try {
           console.log('🔎 Iniciando busca de consultas locais no localStorage...')
-          const consultasLocais = buscarConsultasLocais(usuarioId)
+          const consultasLocais = buscarConsultasPorUsuarioOuEmail(
+            usuarioId,
+            usuario.email // Usa o email como fallback
+          )
           console.log('📋 Consultas locais encontradas:', consultasLocais.length)
           if (consultasLocais.length > 0) {
             console.log('📋 Primeira consulta local encontrada:', consultasLocais[0])
             console.log('📋 ID da primeira consulta:', consultasLocais[0].usuarioId)
           } else {
-            console.warn('⚠️ Nenhuma consulta local encontrada para o ID:', usuarioId)
+            console.warn('⚠️ Nenhuma consulta local encontrada para o ID:', usuarioId, 'ou email:', usuario.email)
           }
           consultasData.push(...consultasLocais)
         } catch (error) {
