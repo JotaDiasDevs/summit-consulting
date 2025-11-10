@@ -1,233 +1,96 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../contexts/auth/AuthContext'
-import { apiService, consultaService } from '../../services/api/apiService'
-import { buscarConsultasPorUsuarioOuEmail } from '../../services/local/consultaLocalService'
-import type { Consulta } from '../../types/common'
+import { usuarioService, consultaService } from '../../services/api/apiService'
+import { API_CONFIG } from '../../config/api'
 import LoadingSpinner from '../../components/common/LoadingSpinner'
+
+interface Estatisticas {
+  totalPacientes: number
+  totalMedicos: number
+  totalConsultas: number
+  consultasAgendadas: number
+  consultasRealizadas: number
+  consultasCanceladas: number
+}
 
 const Dashboard: React.FC = () => {
   const { usuario } = useAuth()
-  const [consultas, setConsultas] = useState<Consulta[]>([])
+  const [estatisticas, setEstatisticas] = useState<Estatisticas>({
+    totalPacientes: 0,
+    totalMedicos: 0,
+    totalConsultas: 0,
+    consultasAgendadas: 0,
+    consultasRealizadas: 0,
+    consultasCanceladas: 0,
+  })
   const [carregando, setCarregando] = useState(true)
   const [erro, setErro] = useState('')
 
   useEffect(() => {
-    const carregarConsultas = async () => {
-      console.log('🔄 useEffect do Dashboard executado')
-      console.log('👤 Usuário do contexto:', usuario)
-      
-      // Aguarda um pouco para garantir que o usuário foi carregado do localStorage
-      await new Promise(resolve => setTimeout(resolve, 200))
-      
-      // Tenta carregar usuário do localStorage se não estiver no contexto ou se não tiver ID
-      let usuarioFinal: typeof usuario = usuario
-      
-      if (!usuarioFinal || !usuarioFinal.id) {
-        console.warn('⚠️ Usuário não disponível no contexto ou sem ID, tentando carregar do localStorage...')
-        try {
-          const usuarioSalvo = localStorage.getItem('usuario')
-          if (usuarioSalvo) {
-            const usuarioParsed = JSON.parse(usuarioSalvo)
-            console.log('📦 Usuário encontrado no localStorage:', usuarioParsed)
-            
-            // Garante que o ID seja string
-            if (usuarioParsed.id) {
-              usuarioParsed.id = String(usuarioParsed.id)
-              usuarioFinal = usuarioParsed as typeof usuario
-              if (usuarioFinal) {
-                console.log('✅ Usuário carregado do localStorage com ID:', usuarioFinal.id)
-              }
-            } else {
-              console.error('❌ Usuário no localStorage sem ID válido:', usuarioParsed)
-              setCarregando(false)
-              setErro('Usuário sem ID válido. Faça login novamente.')
-              return
-            }
-          } else {
-            console.error('❌ Nenhum usuário encontrado no localStorage')
-            setCarregando(false)
-            setErro('Usuário não encontrado. Faça login novamente.')
-            return
-          }
-        } catch (error) {
-          console.error('❌ Erro ao carregar usuário do localStorage:', error)
-          setCarregando(false)
-          setErro('Erro ao carregar dados do usuário.')
-          return
-        }
-      }
-      
-      // Valida se o usuário tem ID válido
-      if (!usuarioFinal || !usuarioFinal.id) {
-        console.error('❌ Usuário final sem ID válido:', usuarioFinal)
-        setCarregando(false)
-        setErro('Usuário sem ID válido. Faça login novamente.')
-        return
-      }
-      
-      const usuarioId = String(usuarioFinal.id)
-      if (!usuarioId || usuarioId === 'null' || usuarioId === 'undefined' || usuarioId === '') {
-        console.error('❌ ID do usuário inválido:', usuarioId)
-        console.error('👤 Dados completos do usuário:', usuarioFinal)
-        setCarregando(false)
-        setErro('ID do usuário inválido. Faça login novamente.')
-        return
-      }
-      
+    const carregarEstatisticas = async () => {
       try {
         setCarregando(true)
         setErro('')
         
-        // Garante que o ID seja string (já validado acima)
-        const usuarioIdFinal = usuarioId
-        const usuarioEmail = usuarioFinal.email || ''
-        console.log('🔍 ===== INÍCIO DA BUSCA DE CONSULTAS =====')
-        console.log('🔍 Buscando consultas para usuário ID:', usuarioIdFinal)
-        console.log('👤 Dados completos do usuário:', usuarioFinal)
-        console.log('👤 Nome do usuário:', usuarioFinal.nome)
-        console.log('👤 Email do usuário:', usuarioEmail)
+        console.log('📊 Carregando estatísticas...')
         
-        // Busca consultas do usuário (da API e do localStorage)
-        let consultasData: Consulta[] = []
+        // Busca todas as estatísticas em paralelo
+        const [pacientesResult, medicosResult, consultasResult] = await Promise.allSettled([
+          // Tenta buscar pacientes do endpoint específico, se não funcionar, busca de usuários
+          fetch(`${API_CONFIG.BASE_URL}/pacientes`, { method: 'GET' })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .catch(() => usuarioService.buscarTodos().then(usuarios => 
+              usuarios.filter(u => u.tipo === 'paciente' || !u.tipo)
+            )),
+          // Tenta buscar médicos do endpoint específico, se não funcionar, busca de usuários
+          fetch(`${API_CONFIG.BASE_URL}/medicos`, { method: 'GET' })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .catch(() => usuarioService.buscarTodos().then(usuarios => 
+              usuarios.filter(u => u.tipo === 'medico')
+            )),
+          // Busca consultas
+          consultaService.buscarTodas(),
+        ])
         
-        // Primeiro, busca consultas locais (localStorage) - PRIORIZA EMAIL
-        try {
-          console.log('🔎 Iniciando busca de consultas locais no localStorage...')
-          console.log('📧 Buscando por email (prioridade):', usuarioEmail)
-          console.log('🆔 ID do usuário (fallback):', usuarioIdFinal)
-          const consultasLocais = buscarConsultasPorUsuarioOuEmail(
-            usuarioIdFinal,
-            usuarioEmail // Email tem prioridade sobre ID
-          )
-          console.log('📋 Consultas locais encontradas:', consultasLocais.length)
-          if (consultasLocais.length > 0) {
-            console.log('📋 Primeira consulta local encontrada:', consultasLocais[0])
-            console.log('📋 ID da primeira consulta:', consultasLocais[0].usuarioId)
-          } else {
-            console.warn('⚠️ Nenhuma consulta local encontrada para o ID:', usuarioIdFinal, 'ou email:', usuarioEmail)
-          }
-          consultasData.push(...consultasLocais)
-        } catch (error) {
-          console.error('❌ Erro ao buscar consultas locais:', error)
-        }
+        const totalPacientes = pacientesResult.status === 'fulfilled' 
+          ? (Array.isArray(pacientesResult.value) ? pacientesResult.value.length : 0)
+          : 0
+        const totalMedicos = medicosResult.status === 'fulfilled' 
+          ? (Array.isArray(medicosResult.value) ? medicosResult.value.length : 0)
+          : 0
+        const todasConsultas = consultasResult.status === 'fulfilled' ? consultasResult.value : []
         
-        // Depois, tenta buscar da API (se disponível)
-        try {
-          const consultasApi = await consultaService.buscarPorUsuario(usuarioIdFinal)
-          console.log('📋 Consultas recebidas da API:', consultasApi.length)
-          // Adiciona consultas da API que não estão duplicadas
-          consultasApi.forEach(consultaApi => {
-            if (!consultasData.find(c => c.id === consultaApi.id)) {
-              consultasData.push(consultaApi)
-            }
-          })
-        } catch (error) {
-          console.warn('⚠️ Erro ao buscar consultas da API, usando apenas locais:', error)
-          // Fallback: tenta com o método antigo
-          try {
-            const consultasApiAlt = await apiService.buscarConsultasPorUsuario(usuarioIdFinal)
-            consultasApiAlt.forEach(consultaApi => {
-              if (!consultasData.find(c => c.id === consultaApi.id)) {
-                consultasData.push(consultaApi)
-              }
-            })
-          } catch (error2) {
-            console.warn('⚠️ Erro ao buscar consultas (método alternativo):', error2)
-          }
-        }
+        const consultasAgendadas = todasConsultas.filter(c => c.status === 'agendada').length
+        const consultasRealizadas = todasConsultas.filter(c => c.status === 'realizada').length
+        const consultasCanceladas = todasConsultas.filter(c => c.status === 'cancelada').length
         
-        console.log('📊 Total de consultas (locais + API):', consultasData.length)
-        console.log('📋 Consultas brutas recebidas:', JSON.stringify(consultasData, null, 2))
+        setEstatisticas({
+          totalPacientes,
+          totalMedicos,
+          totalConsultas: todasConsultas.length,
+          consultasAgendadas,
+          consultasRealizadas,
+          consultasCanceladas,
+        })
         
-        if (Array.isArray(consultasData) && consultasData.length > 0) {
-          // Validação MUITO simplificada - aceita qualquer consulta que tenha ID
-          // Se foi encontrada por email, deve ser exibida
-          const consultasValidas = consultasData.filter(consulta => {
-            // Apenas verifica se a consulta existe e tem ID
-            if (!consulta) {
-              console.warn('⚠️ Consulta nula ou undefined filtrada')
-              return false
-            }
-            
-            if (!consulta.id) {
-              console.warn('⚠️ Consulta sem ID filtrada:', consulta)
-              return false
-            }
-            
-            // Se tem ID, aceita (mesmo que alguns campos estejam vazios)
-            // Garante valores padrão para campos que podem estar faltando
-            if (!consulta.data) {
-              consulta.data = new Date().toISOString().split('T')[0]
-              console.log('📅 Data padrão adicionada à consulta:', consulta.id)
-            }
-            if (!consulta.especialidade) {
-              consulta.especialidade = 'Especialidade não informada'
-              console.log('🏥 Especialidade padrão adicionada à consulta:', consulta.id)
-            }
-            if (!consulta.especialista) {
-              consulta.especialista = 'Especialista não informado'
-              console.log('👨‍⚕️ Especialista padrão adicionado à consulta:', consulta.id)
-            }
-            if (!consulta.horario) {
-              consulta.horario = '08:00'
-              console.log('🕐 Horário padrão adicionado à consulta:', consulta.id)
-            }
-            if (!consulta.local) {
-              consulta.local = 'IMREA - Unidade Vila Mariana'
-              console.log('📍 Local padrão adicionado à consulta:', consulta.id)
-            }
-            
-            return true
-          })
-          
-          console.log('✅ Consultas válidas após filtro (com valores padrão):', consultasValidas.length)
-          console.log('📋 Consultas após adicionar valores padrão:', JSON.stringify(consultasValidas, null, 2))
-          
-          // Ordena as consultas válidas
-          const consultasOrdenadas = consultasValidas
-            .sort((a, b) => {
-              try {
-                // Tenta ordenar por data se disponível
-                if (a.data && b.data) {
-                  const dataA = new Date(`${a.data}T${a.horario || '00:00'}`).getTime()
-                  const dataB = new Date(`${b.data}T${b.horario || '00:00'}`).getTime()
-                  return dataA - dataB
-                }
-                // Se não tiver data, mantém a ordem original
-                return 0
-              } catch (error) {
-                console.warn('⚠️ Erro ao ordenar consultas:', error)
-                return 0
-              }
-            })
-          
-          console.log('✅ Consultas ordenadas e prontas para exibição:', consultasOrdenadas.length)
-          console.log('📋 Consultas finais:', JSON.stringify(consultasOrdenadas, null, 2))
-          setConsultas(consultasOrdenadas)
-        } else {
-          console.log('ℹ️ Nenhuma consulta encontrada ou array vazio')
-          setConsultas([])
-        }
+        console.log('✅ Estatísticas carregadas:', {
+          totalPacientes,
+          totalMedicos,
+          totalConsultas: todasConsultas.length,
+          consultasAgendadas,
+          consultasRealizadas,
+          consultasCanceladas,
+        })
       } catch (error) {
-        console.error('❌ Erro ao carregar consultas:', error)
-        setErro('Erro ao carregar suas consultas. Tente novamente mais tarde.')
-        setConsultas([])
+        console.error('❌ Erro ao carregar estatísticas:', error)
+        setErro('Erro ao carregar estatísticas. Tente novamente mais tarde.')
       } finally {
         setCarregando(false)
       }
     }
 
-    
-    // Aguarda um pouco para garantir que o usuário foi carregado
-    const timeoutId = setTimeout(() => {
-      console.log('⏰ Timeout executado, carregando consultas...')
-      carregarConsultas()
-    }, 200)
-    
-    return () => {
-      clearTimeout(timeoutId)
-    }
-  }, [usuario?.id, usuario])
+    carregarEstatisticas()
+  }, [])
 
   if (carregando) {
     return <LoadingSpinner />
@@ -235,58 +98,110 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      
+      {/* Cabeçalho */}
       <div className="mb-8">
         <h1 className="text-5xl font-bold mb-4 text-gray-800">📊 Dashboard</h1>
         <div className="bg-green-50 rounded-lg p-6 border-l-4 border-green-600">
           <h2 className="text-3xl font-bold mb-2 text-gray-800">Bem-vindo! 👋</h2>
           <p className="text-xl text-gray-700">
             Olá, <span className="font-bold text-green-700">{usuario?.nome}</span>! 
-            Aqui estão suas consultas agendadas no IMREA.
+            Aqui estão as estatísticas do sistema IMREA.
           </p>
         </div>
       </div>
 
-      
+      {/* Mensagem de erro */}
       {erro && (
         <div className="mb-6 p-6 bg-red-50 border-l-4 border-red-600 rounded-lg">
           <p className="text-xl text-red-700 font-semibold">⚠️ {erro}</p>
         </div>
       )}
 
-      
+      {/* Estatísticas Principais */}
       <div className="mb-8">
         <h2 className="text-4xl font-bold mb-6 text-gray-800">
-          📅 Suas Consultas Agendadas
+          📈 Estatísticas Gerais
         </h2>
-
-        {consultas.length === 0 ? (
-          <div className="bg-blue-50 rounded-lg p-12 text-center border-2 border-blue-200">
-            <div className="text-6xl mb-4">📋</div>
-            <p className="text-2xl font-semibold text-gray-700 mb-2">
-              Nenhuma consulta agendada
-            </p>
-            <p className="text-xl text-gray-600">
-              Quando você agendar uma consulta, ela aparecerá aqui.
-            </p>
-          </div>
-        ) : (
-          <div className="bg-green-50 rounded-xl p-12 text-center border-2 border-green-200 shadow-lg">
-            <div className="text-6xl mb-6">✅</div>
-            <p className="text-2xl font-semibold text-gray-800 mb-4">
-              Você possui consultas marcadas para breve
-            </p>
-            <p className="text-xl text-gray-700">
-              Acesse o Portal do Paciente em seu aplicativo e verifique os detalhes
-            </p>
-            <div className="mt-6 text-lg text-gray-600">
-              <p>Total de consultas agendadas: <span className="font-bold text-green-700">{consultas.length}</span></p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Card: Total de Pacientes */}
+          <div className="bg-blue-50 rounded-xl p-8 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-5xl">👥</div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-gray-600 mb-1">PACIENTES</p>
+                <p className="text-4xl font-bold text-blue-700">{estatisticas.totalPacientes}</p>
+              </div>
             </div>
+            <p className="text-lg text-gray-700">Total de pacientes cadastrados</p>
           </div>
-        )}
+
+          {/* Card: Total de Médicos */}
+          <div className="bg-purple-50 rounded-xl p-8 border-2 border-purple-200 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-5xl">👨‍⚕️</div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-gray-600 mb-1">MÉDICOS</p>
+                <p className="text-4xl font-bold text-purple-700">{estatisticas.totalMedicos}</p>
+              </div>
+            </div>
+            <p className="text-lg text-gray-700">Total de médicos cadastrados</p>
+          </div>
+
+          {/* Card: Total de Consultas */}
+          <div className="bg-green-50 rounded-xl p-8 border-2 border-green-200 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-5xl">📅</div>
+              <div className="text-right">
+                <p className="text-sm font-semibold text-gray-600 mb-1">CONSULTAS</p>
+                <p className="text-4xl font-bold text-green-700">{estatisticas.totalConsultas}</p>
+              </div>
+            </div>
+            <p className="text-lg text-gray-700">Total de consultas no sistema</p>
+          </div>
+        </div>
       </div>
 
-      
+      {/* Estatísticas de Consultas por Status */}
+      <div className="mb-8">
+        <h2 className="text-4xl font-bold mb-6 text-gray-800">
+          📊 Status das Consultas
+        </h2>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Card: Consultas Agendadas */}
+          <div className="bg-yellow-50 rounded-xl p-8 border-2 border-yellow-200 shadow-lg">
+            <div className="text-center">
+              <div className="text-5xl mb-4">⏰</div>
+              <p className="text-4xl font-bold text-yellow-700 mb-2">{estatisticas.consultasAgendadas}</p>
+              <p className="text-xl font-semibold text-gray-800 mb-1">Agendadas</p>
+              <p className="text-sm text-gray-600">Consultas marcadas</p>
+            </div>
+          </div>
+
+          {/* Card: Consultas Realizadas */}
+          <div className="bg-green-50 rounded-xl p-8 border-2 border-green-200 shadow-lg">
+            <div className="text-center">
+              <div className="text-5xl mb-4">✅</div>
+              <p className="text-4xl font-bold text-green-700 mb-2">{estatisticas.consultasRealizadas}</p>
+              <p className="text-xl font-semibold text-gray-800 mb-1">Realizadas</p>
+              <p className="text-sm text-gray-600">Consultas concluídas</p>
+            </div>
+          </div>
+
+          {/* Card: Consultas Canceladas */}
+          <div className="bg-red-50 rounded-xl p-8 border-2 border-red-200 shadow-lg">
+            <div className="text-center">
+              <div className="text-5xl mb-4">❌</div>
+              <p className="text-4xl font-bold text-red-700 mb-2">{estatisticas.consultasCanceladas}</p>
+              <p className="text-xl font-semibold text-gray-800 mb-1">Canceladas</p>
+              <p className="text-sm text-gray-600">Consultas canceladas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Informações do Usuário */}
       <div className="bg-gray-50 rounded-xl p-8 border-2 border-gray-200">
         <h3 className="text-3xl font-bold mb-6 text-gray-800">👤 Seus Dados</h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -296,7 +211,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-600 mb-2">USUÁRIO</p>
-            <p className="text-xl font-bold text-gray-800">{usuario?.nomeUsuario}</p>
+            <p className="text-xl font-bold text-gray-800">{usuario?.nomeUsuario || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm font-semibold text-gray-600 mb-2">E-MAIL</p>

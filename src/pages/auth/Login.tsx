@@ -31,11 +31,6 @@ const Login: React.FC = () => {
       console.log('🔑 ID do usuário após conversão:', usuarioComIdCorrigido.id, 'Tipo:', typeof usuarioComIdCorrigido.id)
       console.log('💾 Salvando usuário no localStorage:', usuarioComIdCorrigido)
       
-      // Verifica se há consultas locais para este usuário antes de fazer login
-      const { buscarConsultasPorUsuario } = await import('../../services/local/consultaLocalService')
-      const consultasExistentes = buscarConsultasPorUsuario(usuarioComIdCorrigido.id)
-      console.log('📋 Consultas locais encontradas para este usuário:', consultasExistentes.length)
-      
       login(usuarioComIdCorrigido)
       navigate('/dashboard')
     } catch (error) {
